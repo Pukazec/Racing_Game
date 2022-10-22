@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="15" height="8" tilewidth="128" tileheight="128" infinite="0" nextlayerid="4" nextobjectid="21">
+ <tileset firstgid="1" name="spritesheet_tiles" tilewidth="128" tileheight="128" tilecount="324" columns="18">
+  <image source="spritesheet_tiles.png" width="2304" height="2304"/>
+ </tileset>
+ <layer id="1" name="Tile Layer 1" width="15" height="8">
+  <data encoding="csv">
+228,210,210,210,210,192,163,228,210,210,210,210,210,210,192,
+67,49,163,163,49,13,210,318,49,163,163,163,163,49,31,
+67,163,49,49,163,49,49,49,49,49,49,49,49,163,31,
+67,49,49,49,163,49,163,103,282,85,49,49,49,163,31,
+67,49,49,49,49,163,49,31,163,67,163,49,163,49,31,
+67,163,49,49,49,49,49,13,210,318,163,103,282,282,264,
+67,49,163,163,163,163,163,163,163,163,49,31,163,163,163,
+300,282,282,282,282,282,282,282,282,282,282,264,163,163,163
+</data>
+ </layer>
+ <layer id="2" name="Tile Layer 2" width="15" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,204,222,222,168,0,0,0,204,221,185,185,238,168,0,
+0,240,0,0,240,0,204,222,166,0,0,0,0,240,0,
+0,202,168,0,240,0,240,0,0,0,204,168,0,240,0,
+0,204,166,0,202,222,166,0,0,0,240,202,222,166,0,
+0,240,0,0,0,0,0,0,0,0,240,0,0,0,0,
+0,202,221,185,185,185,185,289,185,238,166,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="3" name="Object Layer 1">
+  <object id="2" type="leftWall" x="0" y="29.3333" width="1858.66" height="98.2685"/>
+  <object id="3" type="leftWall" x="640.085" y="109.823" width="127.152" height="402.135"/>
+  <object id="4" type="leftWall" x="640.585" y="88.4687" width="383.682" height="167.485"/>
+  <object id="5" type="leftWall" x="1792.23" y="68.245" width="106.627" height="739.721"/>
+  <object id="6" type="leftWall" x="1407.69" y="639.838" width="444.216" height="350.492"/>
+  <object id="7" type="leftWall" x="15.25" y="895.364" width="1415.2" height="71.1018"/>
+  <object id="8" type="leftWall" x="1.52532" y="115.925" width="126.743" height="902.991"/>
+  <object id="9" type="rightWall" x="255.729" y="256.254" width="255.254" height="128.076"/>
+  <object id="10" type="rightWall" x="255.704" y="639.11" width="1024.32" height="128.576"/>
+  <object id="11" type="rightWall" x="383.664" y="274.558" width="128.319" height="388.957"/>
+  <object id="12" type="rightWall" x="895.364" y="383.831" width="384.657" height="374.255"/>
+  <object id="13" type="rightWall" x="1151.84" y="256.254" width="512.008" height="128.102"/>
+  <object id="14" type="rightWall" x="1536" y="324.894" width="127.935" height="187.231"/>
+  <object id="15" type="leftWall" x="116.75" y="510.773" width="140" height="2.5"/>
+  <object id="18" type="leftWall" x="1407.75" y="512.25" width="1.25" height="129"/>
+  <object id="20" type="finish" x="985.5" y="768" width="3.75" height="127.5"/>
+ </objectgroup>
+</map>

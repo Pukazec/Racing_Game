@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.9" tiledversion="1.9.2" orientation="orthogonal" renderorder="right-down" width="15" height="8" tilewidth="128" tileheight="128" infinite="0" nextlayerid="4" nextobjectid="35">
+ <tileset firstgid="1" name="spritesheet_tiles" tilewidth="128" tileheight="128" tilecount="324" columns="18">
+  <image source="../../../../../../../Track/Spritesheets/spritesheet_tiles.png" width="2304" height="2304"/>
+ </tileset>
+ <layer id="1" name="Tile Layer 1" width="15" height="8">
+  <data encoding="csv">
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49,
+49,49,49,49,49,49,49,49,49,49,49,49,49,49,49
+</data>
+ </layer>
+ <layer id="3" name="Tile Layer 2" width="15" height="8">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,204,221,185,185,185,185,185,185,185,185,185,238,168,0,
+0,220,0,0,0,0,0,0,0,0,0,0,0,220,0,
+0,185,0,0,0,0,0,0,0,0,0,0,0,185,0,
+0,185,0,0,0,0,0,0,0,0,0,0,0,185,0,
+0,239,0,0,0,0,0,0,0,0,0,0,0,239,0,
+0,202,221,185,185,185,185,289,185,185,185,185,238,166,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+ <objectgroup id="2" name="Object Layer 1">
+  <object id="1" type="rightWall" x="256.254" y="256.254" width="1407.82" height="511.46"/>
+  <object id="2" type="finish" x="989.333" y="768" width="1" height="126.667"/>
+  <object id="3" type="leftWall" x="11.1667" y="13.5" width="117" height="890.083"/>
+  <object id="4" type="leftWall" x="1791.76" y="79.53" width="111" height="835.333"/>
+  <object id="5" type="leftWall" x="109.667" y="12.5" width="1722.33" height="114.5"/>
+  <object id="6" type="leftWall" x="66.5" y="895.75" width="1752.33" height="118.5"/>
+ </objectgroup>
+</map>
