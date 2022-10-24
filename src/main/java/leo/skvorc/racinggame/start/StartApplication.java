@@ -13,7 +13,8 @@ public class StartApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("gameStart.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(
+                StartApplication.class.getResource("gameStart.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         stage.setTitle("Racing game");
         stage.setScene(scene);

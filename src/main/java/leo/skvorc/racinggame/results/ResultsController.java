@@ -17,6 +17,7 @@ public class ResultsController implements Initializable {
 
     @FXML
     private Label lblPlayer1Name;
+
     @FXML
     private Label lblPlayer1NumOfWins;
 

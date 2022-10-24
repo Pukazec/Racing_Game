@@ -79,21 +79,6 @@ public class TrackSelectionController implements Initializable {
 
         SerializerDeserializer.saveConfig(config);
 
-
-
-        new Thread(() -> {
-            /*Runtime runtime = Runtime.getRuntime();
-            try {
-                Process process = runtime.exec("notepad");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            //"C:\\temp\\demo\\src\\main\\java\\com\\example\\demo\\HomeApplication"*/
-            GameApplication racing = new RacingApp();
-            RacingApp.main(new String[0]);
-        }).start();
-
         Platform.exit();
     }
 }
