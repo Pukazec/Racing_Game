@@ -1,8 +1,5 @@
 package leo.skvorc.racinggame.start;
 
-import com.almasb.fxgl.app.GameApplication;
-import com.almasb.fxgl.app.GameSettings;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -11,9 +8,7 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
-import javafx.stage.Stage;
 import leo.skvorc.racinggame.Config;
-import leo.skvorc.racinggame.RacingApp;
 import leo.skvorc.racinggame.utils.ImageLoader;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
@@ -43,11 +38,6 @@ public class TrackSelectionController implements Initializable {
     ToggleGroup radioButtonGroup;
 
     private static Config config;
-
-
-    public static Config getConfig() {
-        return config;
-    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {

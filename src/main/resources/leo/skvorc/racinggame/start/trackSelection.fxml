@@ -60,5 +60,6 @@
             <Insets right="15.0" />
          </GridPane.margin>
       </Slider>
+      <Label fx:id="lblError" textFill="WHITE" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="TOP" />
    </children>
 </GridPane>
