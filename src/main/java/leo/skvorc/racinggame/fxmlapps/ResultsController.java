@@ -2,6 +2,7 @@ package leo.skvorc.racinggame.fxmlapps;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import leo.skvorc.racinggame.Config;
@@ -29,6 +30,8 @@ public class ResultsController implements Initializable {
     private Label lblNumOfLaps;
     @FXML
     private ImageView imgTrack;
+    @FXML
+    private Button btnDocumentation;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -45,7 +48,9 @@ public class ResultsController implements Initializable {
     }
 
     public void documentation(){
-        DocumentationGenerator.generateDocumentation();
+        DocumentationGenerator.generateParametersString();
+        btnDocumentation.setText("Documentation generated");
+        btnDocumentation.setDisable(true);
     }
 
 }
