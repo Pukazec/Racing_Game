@@ -5,6 +5,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import leo.skvorc.racinggame.Config;
+import leo.skvorc.racinggame.utils.DocumentationGenerator;
 import leo.skvorc.racinggame.utils.ImageLoader;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
@@ -44,4 +45,9 @@ public class ResultsController implements Initializable {
         if (config.getTrack() == 1){ imgTrack.setImage(ImageLoader.loadImage(Config.TRACK1)); }
         if (config.getTrack() == 2){ imgTrack.setImage(ImageLoader.loadImage(Config.TRACK2)); }
     }
+
+    public void documentation(){
+        DocumentationGenerator.generateDocumentation();
+    }
+
 }
