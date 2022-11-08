@@ -1,4 +1,4 @@
-package leo.skvorc.racinggame.results;
+package leo.skvorc.racinggame.fxmlapps;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -13,8 +13,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class ResultsController implements Initializable {
-
-    private Config config;
 
     @FXML
     private Label lblPlayer1Name;
@@ -35,7 +33,7 @@ public class ResultsController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        config = SerializerDeserializer.loadConfig();
+        Config config = SerializerDeserializer.loadConfig();
 
         lblPlayer1Name.setText(config.getPlayer1().getPlayerName());
         lblPlayer1NumOfWins.setText(String.valueOf(config.getPlayer1().getNumberOfWins()));

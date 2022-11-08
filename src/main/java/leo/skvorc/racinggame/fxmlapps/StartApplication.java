@@ -1,9 +1,8 @@
-package leo.skvorc.racinggame.start;
+package leo.skvorc.racinggame.fxmlapps;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
+import leo.skvorc.racinggame.utils.FxmlUtils;
 
 import java.io.IOException;
 
@@ -13,12 +12,8 @@ public class StartApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(
-                StartApplication.class.getResource("gameStart.fxml"));
-        Scene scene = new Scene(fxmlLoader.load());
-        stage.setTitle("Racing game");
-        stage.setScene(scene);
-        stage.show();
+
+        FxmlUtils.showScreen("gameStart.fxml", stage);
         mainStage = stage;
     }
 

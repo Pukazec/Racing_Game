@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="leo.skvorc.racinggame.start.TrackSelectionController">
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="leo.skvorc.racinggame.fxmlapps.TrackSelectionController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -29,26 +29,23 @@
             <Font name="Century Gothic Bold Italic" size="35.0" />
          </font>
       </Label>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
-         <children>
-            <ImageView fx:id="imgTrack1" fitHeight="200.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />
-            <RadioButton fx:id="rbTrack1" alignment="TOP_CENTER" mnemonicParsing="false" text="Oval" textFill="WHITE">
-               <font>
-                  <Font size="15.0" />
-               </font>
-            </RadioButton>
-         </children>
-      </VBox>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
-         <children>
-            <ImageView fx:id="imgTrack2" fitHeight="200.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true" />
-            <RadioButton fx:id="rbTrack2" mnemonicParsing="false" text="Road corse" textFill="WHITE">
-               <font>
-                  <Font size="15.0" />
-               </font>
-            </RadioButton>
-         </children>
-      </VBox>
+       <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" GridPane.halignment="CENTER" GridPane.rowIndex="1"
+             GridPane.valignment="CENTER">
+           <ImageView fx:id="imgTrack1" fitHeight="200.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true"/>
+           <RadioButton fx:id="rbTrack1" alignment="TOP_CENTER" mnemonicParsing="false" text="Oval" textFill="WHITE">
+              <font>
+                  <Font size="15.0"/>
+              </font>
+           </RadioButton>
+       </VBox>
+       <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+           <ImageView fx:id="imgTrack2" fitHeight="200.0" fitWidth="300.0" pickOnBounds="true" preserveRatio="true"/>
+           <RadioButton fx:id="rbTrack2" mnemonicParsing="false" text="Road corse" textFill="WHITE">
+              <font>
+                  <Font size="15.0"/>
+              </font>
+           </RadioButton>
+       </VBox>
       <Button mnemonicParsing="false" onAction="#startRacing" text="GO RACING" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="3">
          <font>
             <Font name="Century Gothic Bold" size="19.0" />

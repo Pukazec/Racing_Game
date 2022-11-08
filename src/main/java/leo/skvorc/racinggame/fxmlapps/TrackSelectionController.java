@@ -1,4 +1,4 @@
-package leo.skvorc.racinggame.start;
+package leo.skvorc.racinggame.fxmlapps;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;

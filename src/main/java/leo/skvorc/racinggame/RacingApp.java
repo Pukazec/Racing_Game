@@ -3,21 +3,13 @@ package leo.skvorc.racinggame;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
-import javafx.stage.Stage;
-import leo.skvorc.racinggame.start.StartApplication;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
-
-import java.io.IOException;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class RacingApp extends GameApplication {
-
-    private static Stage mainStage;
 
     private final MoveDirection moveDirection = new MoveDirection();
 
@@ -111,9 +103,7 @@ public class RacingApp extends GameApplication {
 
         });
 
-        onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> {
-            moveDirection.RightCollision(car);
-        });
+        onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> moveDirection.RightCollision(car));
 
         onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> {
             moveDirection.LeftCollision(car);
@@ -121,23 +111,6 @@ public class RacingApp extends GameApplication {
         });
     }
 
-    public static Stage getMainStage() {
-        return mainStage;
-    }
-
-    public static void startGame(Stage stage){
-    FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("gameStart.fxml"));
-        Scene scene = null;
-        try {
-            scene = new Scene(fxmlLoader.load());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        stage.setTitle("Racing game");
-        stage.setScene(scene);
-        stage.show();
-        mainStage = stage;
-    }
     private void newGame() {
         SerializerDeserializer.saveConfig(config);
         getGameController().startNewGame();

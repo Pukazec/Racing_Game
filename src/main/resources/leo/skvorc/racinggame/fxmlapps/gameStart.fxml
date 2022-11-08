@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-<GridPane prefHeight="250.0" prefWidth="450.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="leo.skvorc.racinggame.start.StartController">
+<GridPane prefHeight="250.0" prefWidth="450.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="leo.skvorc.racinggame.fxmlapps.StartController">
    <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -30,23 +30,23 @@
          </font></Button>
       <Label text="Player 1:" textFill="WHITE" GridPane.halignment="RIGHT" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
       <TextField fx:id="txtP1" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER" />
-      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
-         <children>
-            <RadioButton fx:id="black1" mnemonicParsing="false" style="-fx-border-color: gray; -fx-border-width: 5px;" />
-            <RadioButton fx:id="yellow1" mnemonicParsing="false" style="-fx-border-color: yellow; -fx-border-width: 5px;" />
-            <RadioButton fx:id="green1" mnemonicParsing="false" style="-fx-border-color: green; -fx-border-width: 5px;" />
-            <RadioButton fx:id="orange1" layoutX="62.0" layoutY="10.0" mnemonicParsing="false" style="-fx-border-color: orange; -fx-border-width: 5px;" />
-         </children>
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2"
+            GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+         <RadioButton fx:id="black1" mnemonicParsing="false" style="-fx-border-color: gray; -fx-border-width: 5px;"/>
+         <RadioButton fx:id="yellow1" mnemonicParsing="false" style="-fx-border-color: yellow; -fx-border-width: 5px;"/>
+         <RadioButton fx:id="green1" mnemonicParsing="false" style="-fx-border-color: green; -fx-border-width: 5px;"/>
+         <RadioButton fx:id="orange1" layoutX="62.0" layoutY="10.0" mnemonicParsing="false"
+                      style="-fx-border-color: orange; -fx-border-width: 5px;"/>
       </HBox>
       <Label text="Player 2:" textFill="WHITE" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
       <TextField fx:id="txtP2" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
-      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
-         <children>
-            <RadioButton fx:id="black2" mnemonicParsing="false" style="-fx-border-color: gray; -fx-border-width: 5px;" />
-            <RadioButton fx:id="yellow2" mnemonicParsing="false" style="-fx-border-color: yellow; -fx-border-width: 5px;" />
-            <RadioButton fx:id="green2" mnemonicParsing="false" style="-fx-border-color: green; -fx-border-width: 5px;" />
-            <RadioButton fx:id="orange2" layoutX="62.0" layoutY="10.0" mnemonicParsing="false" style="-fx-border-color: orange; -fx-border-width: 5px;" />
-         </children>
+      <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2"
+            GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
+         <RadioButton fx:id="black2" mnemonicParsing="false" style="-fx-border-color: gray; -fx-border-width: 5px;"/>
+         <RadioButton fx:id="yellow2" mnemonicParsing="false" style="-fx-border-color: yellow; -fx-border-width: 5px;"/>
+         <RadioButton fx:id="green2" mnemonicParsing="false" style="-fx-border-color: green; -fx-border-width: 5px;"/>
+         <RadioButton fx:id="orange2" layoutX="62.0" layoutY="10.0" mnemonicParsing="false"
+                      style="-fx-border-color: orange; -fx-border-width: 5px;"/>
       </HBox>
       <Label text="Name" textFill="WHITE" GridPane.columnIndex="1" GridPane.rowIndex="1" />
       <Label text="Color" textFill="WHITE" GridPane.columnIndex="2" GridPane.rowIndex="1" />

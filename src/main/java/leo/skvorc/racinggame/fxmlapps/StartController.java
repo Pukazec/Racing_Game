@@ -1,14 +1,12 @@
-package leo.skvorc.racinggame.start;
+package leo.skvorc.racinggame.fxmlapps;
 
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
 import leo.skvorc.racinggame.Config;
 import leo.skvorc.racinggame.model.CarColor;
 import leo.skvorc.racinggame.model.PlayerDetails;
+import leo.skvorc.racinggame.utils.FxmlUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -45,7 +43,7 @@ public class StartController implements Initializable {
 
     private static Config config;
 
-    private List<TextField> validationFields = new ArrayList();
+    private final List<TextField> validationFields = new ArrayList<>();
 
     public static Config getConfig() {
         return config;
@@ -74,7 +72,7 @@ public class StartController implements Initializable {
         yellow2.setSelected(true);
     }
 
-    public void selectTrack(){
+    public void selectTrack() throws IOException {
         if (notValid()){
             lblError.setText("Fill all fields");
             return;
@@ -89,20 +87,7 @@ public class StartController implements Initializable {
                         new PlayerDetails(txtP1.getText(), CarColor.valueOf(color1)),
                         new PlayerDetails(txtP2.getText(), CarColor.valueOf(color2)));
 
-        FXMLLoader fxmlLoader = new FXMLLoader(StartApplication.class.getResource("trackSelection.fxml"));
-
-        Scene scene = null;
-        try {
-            scene = new Scene(fxmlLoader.load());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        Stage stage = StartApplication.getMainStage();
-
-        stage.setTitle("Select track!");
-        stage.setScene(scene);
-        stage.show();
+        FxmlUtils.showScreen("results.fxml", StartApplication.getMainStage());
     }
 
     private boolean notValid() {
