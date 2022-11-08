@@ -4,6 +4,7 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
 import javafx.scene.input.KeyCode;
+import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
@@ -54,7 +55,6 @@ public class RacingApp extends GameApplication {
 
         getGameWorld().addEntityFactory(new RacingFactory(config));
 
-
         setLevelFromMap("tmx/track" + config.getTrack() + ".tmx");
 
         player1 = spawn("player1", 1050, 765);
@@ -69,29 +69,11 @@ public class RacingApp extends GameApplication {
     protected void initPhysics() {
         onCollisionBegin(EntityType.PLAYER, EntityType.FINISH, (car, finish) -> {
 
-            if (lapCounterP1 == config.getNumLaps()) {
-                p1LastLap = true;
-            }
-            if (lapCounterP2 == config.getNumLaps()) {
-                p2LastLap = true;
-            }
+            p1LastLap = checkLastLap(lapCounterP1);
+            p2LastLap = checkLastLap(lapCounterP2);
 
-            if (lapCounterP1 == config.getNumLaps() + 1 && p1LastLap) {
-                showMessage("Player " + config.getPlayer1().getPlayerName() + " won!", () -> {
-                    lapCounterP1 = 0;
-                    lapCounterP2 = 0;
-                    config.getPlayer1().recordWin();
-                    newGame();
-                });
-            }
-            if (lapCounterP2 == config.getNumLaps() + 1 && p2LastLap){
-                showMessage("Player " + config.getPlayer2().getPlayerName() + " won!", () -> {
-                    lapCounterP1 = 0;
-                    lapCounterP2 = 0;
-                    config.getPlayer2().recordWin();
-                    newGame();
-                });
-            }
+            checkWin(lapCounterP1, p1LastLap, config.getPlayer1());
+            checkWin(lapCounterP2, p2LastLap, config.getPlayer2());
 
             if (car.equals(player1)) {
                 lapCounterP1++;
@@ -100,15 +82,26 @@ public class RacingApp extends GameApplication {
             if (car.equals(player2)) {
                 lapCounterP2++;
             }
-
         });
 
         onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> moveDirection.RightCollision(car));
 
-        onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> {
-            moveDirection.LeftCollision(car);
-            System.out.println(car.getRotation());
-        });
+        onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> moveDirection.LeftCollision(car));
+    }
+
+    private boolean checkLastLap(int lapCounter) {
+        return lapCounter >= config.getNumLaps();
+    }
+
+    private void checkWin(int lapCounter, boolean lastLap, PlayerDetails player) {
+        if (lapCounter == config.getNumLaps() + 1 && lastLap) {
+            showMessage("Player " + player.getPlayerName() + " won!", () -> {
+                lapCounterP1 = 0;
+                lapCounterP2 = 0;
+                player.recordWin();
+                newGame();
+            });
+        }
     }
 
     private void newGame() {

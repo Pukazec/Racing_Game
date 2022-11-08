@@ -65,7 +65,7 @@ public class StartController implements Initializable {
         validationFields.add(txtP2);
 
 
-
+        //TODO remove mock data
         txtP1.setText("Mirko");
         txtP2.setText("Slavko");
         orange1.setSelected(true);

@@ -30,20 +30,13 @@ public class Config implements Serializable {
         this.player2 = player2;
     }
 
-    public PlayerDetails getPlayer1() {
-        return player1;
-    }
+    public PlayerDetails getPlayer1() { return player1; }
 
-    public PlayerDetails getPlayer2() {
-        return player2;
-    }
+    public PlayerDetails getPlayer2() { return player2; }
 
-    public void setPlayer1(PlayerDetails player1) { this.player1 = player1;
-    }
+    public void setPlayer1(PlayerDetails player1) { this.player1 = player1; }
 
-    public void setPlayer2(PlayerDetails player2) {
-        this.player2 = player2;
-    }
+    public void setPlayer2(PlayerDetails player2) { this.player2 = player2; }
 
     public int getTrack() {
         return track;
@@ -53,9 +46,7 @@ public class Config implements Serializable {
         this.track = track;
     }
 
-    public int getNumLaps() {
-        return numLaps;
-    }
+    public int getNumLaps() { return numLaps; }
 
     public void setNumLaps(int numLaps) {
         this.numLaps = numLaps;

@@ -6,12 +6,14 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import leo.skvorc.racinggame.model.PlayerDetails;
+import org.jetbrains.annotations.NotNull;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class RacingFactory implements EntityFactory {
 
-    private Config config;
+    private final Config config;
 
     public RacingFactory(Config config) {
         this.config = config;
@@ -19,49 +21,42 @@ public class RacingFactory implements EntityFactory {
 
     @Spawns("player1")
     public Entity newCar1(SpawnData data) {
-        return entityBuilder(data)
-                .type(EntityType.PLAYER)
-                .viewWithBBox("car" + config.getPlayer1().getCarColor() + ".png")
-                .collidable()
-                .buildAndAttach();
+        return getPlayer(data, config.getPlayer1());
     }
 
     @Spawns("player2")
     public Entity newCar2(SpawnData data) {
-        return entityBuilder(data)
-                .type(EntityType.PLAYER)
-                .viewWithBBox("car" + config.getPlayer2().getCarColor() + ".png")
-                .collidable()
-                .buildAndAttach();
+        return getPlayer(data, config.getPlayer2());
     }
 
     @Spawns("finish")
     public Entity newFinish(SpawnData data){
-        return entityBuilder()
-                .from(data)
-                .type(EntityType.FINISH)
-                .viewWithBBox(new Rectangle(data.<Integer>get("width"), data.<Integer>get("height"), Color.RED))
-                .collidable()
-                .build();
+        return getWall(data, EntityType.FINISH);
     }
 
     @Spawns("rightWall")
     public Entity newRightWall(SpawnData data){
-
-        return entityBuilder()
-                .from(data)
-                .type(EntityType.RIGHTWALL)
-                .viewWithBBox(new Rectangle(data.<Integer>get("width"), data.<Integer>get("height"), Color.TRANSPARENT))
-                .collidable()
-                .build();
+        return getWall(data, EntityType.RIGHTWALL);
     }
 
     @Spawns("leftWall")
     public Entity newLeftWall(SpawnData data){
+        return getWall(data, EntityType.LEFTWALL);
+    }
 
-        return entityBuilder()
-                .from(data)
-                .type(EntityType.LEFTWALL)
+    @NotNull
+    private Entity getPlayer(SpawnData data, PlayerDetails player) {
+        return entityBuilder(data)
+                .type(EntityType.PLAYER)
+                .viewWithBBox("car" + player.getCarColor() + ".png")
+                .collidable()
+                .buildAndAttach();
+    }
+
+    @NotNull
+    private static Entity getWall(SpawnData data, EntityType wallType) {
+        return entityBuilder(data)
+                .type(wallType)
                 .viewWithBBox(new Rectangle(data.<Integer>get("width"), data.<Integer>get("height"), Color.TRANSPARENT))
                 .collidable()
                 .build();

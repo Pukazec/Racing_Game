@@ -49,7 +49,6 @@ public class TrackSelectionController implements Initializable {
         imgTrack1.setImage(ImageLoader.loadImage(Config.TRACK1));
         imgTrack2.setImage(ImageLoader.loadImage(Config.TRACK2));
 
-
         rbTrack2.setSelected(true);
     }
 
