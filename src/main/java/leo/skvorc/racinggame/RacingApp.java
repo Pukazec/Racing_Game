@@ -10,7 +10,7 @@ import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
-public class RacingApp extends GameApplication {
+public class RacingApp extends GameApplication implements Runnable{
 
     private final MoveDirection moveDirection = new MoveDirection();
 
@@ -107,5 +107,10 @@ public class RacingApp extends GameApplication {
     private void newGame() {
         SerializerDeserializer.saveConfig(config);
         getGameController().startNewGame();
+    }
+
+    @Override
+    public void run() {
+        main(new String[]{""});
     }
 }

@@ -6,7 +6,7 @@ import leo.skvorc.racinggame.utils.FxmlUtils;
 
 import java.io.IOException;
 
-public class StartApplication extends Application {
+public class StartApplication extends Application implements Runnable {
 
     private static Stage mainStage;
 
@@ -23,5 +23,10 @@ public class StartApplication extends Application {
 
     public static void main(String[] args) {
         launch();
+    }
+
+    @Override
+    public void run() {
+        main();
     }
 }
