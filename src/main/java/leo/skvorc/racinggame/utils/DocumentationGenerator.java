@@ -33,7 +33,7 @@ public class DocumentationGenerator {
             writer.write("<head>");
             writer.write("<title>Project documentation</title>");
             writer.write("</head>");
-            writer.write("<body>");
+            writer.write("<body style='font-family:Cursive'>");
             writer.write("<h1>Project documentation</h1>");
 
             List<Path> paths = Files.walk(Paths.get("."))

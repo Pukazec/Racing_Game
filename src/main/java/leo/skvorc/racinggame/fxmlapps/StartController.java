@@ -87,7 +87,7 @@ public class StartController implements Initializable {
                         new PlayerDetails(txtP1.getText(), CarColor.valueOf(color1)),
                         new PlayerDetails(txtP2.getText(), CarColor.valueOf(color2)));
 
-        FxmlUtils.showScreen("results.fxml", StartApplication.getMainStage());
+        FxmlUtils.showScreen("trackSelection.fxml", StartApplication.getMainStage());
     }
 
     private boolean notValid() {
