@@ -111,6 +111,7 @@ public class RacingApp extends GameApplication implements Runnable{
 
     @Override
     public void run() {
+        System.out.println("hello from racing app");
         main(new String[]{""});
     }
 }

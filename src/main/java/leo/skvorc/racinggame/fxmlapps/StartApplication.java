@@ -26,7 +26,9 @@ public class StartApplication extends Application implements Runnable {
     }
 
     @Override
-    public void run() {
-        main();
+    public void run()
+    {
+        System.out.println("Hello from start app");
+        main(null);
     }
 }
