@@ -5,8 +5,17 @@ import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
 import javafx.scene.input.KeyCode;
 import leo.skvorc.racinggame.model.PlayerDetails;
+import leo.skvorc.racinggame.model.PlayerMetaData;
+import leo.skvorc.racinggame.server.Server;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -15,6 +24,8 @@ public class RacingApp extends GameApplication {
     private final MoveDirection moveDirection = new MoveDirection();
 
     private Config config;
+
+    private static Map<Long, PlayerMetaData> playersMetadata = new HashMap<>();
 
     private Entity player1;
     private Entity player2;
@@ -49,9 +60,35 @@ public class RacingApp extends GameApplication {
     }
 
     @Override
-    protected void initGame() {
+    protected void initGame() throws RuntimeException {
 
         config = SerializerDeserializer.loadConfig();
+
+        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)){
+            ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
+            System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
+            System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
+
+            PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
+                    String.valueOf(clientSocket.getPort()), config.getPlayer1().getPlayerName(),
+                    ProcessHandle.current().pid());
+
+            playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
+
+            oos.writeObject(newPlayerMetaData);
+
+            System.out.println("Object metadata sent to server!");
+
+            if (ois.available() > 0){
+                System.out.println("Confirmation read from the server!");
+            }
+            Integer readObject = (Integer) ois.readObject();
+            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject.toString());
+            System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
         getGameWorld().addEntityFactory(new RacingFactory(config));
 
