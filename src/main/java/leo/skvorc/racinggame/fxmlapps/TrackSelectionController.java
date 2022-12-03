@@ -9,10 +9,19 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import leo.skvorc.racinggame.Config;
+import leo.skvorc.racinggame.model.PlayerMetaData;
+import leo.skvorc.racinggame.server.Server;
 import leo.skvorc.racinggame.utils.ImageLoader;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 public class TrackSelectionController implements Initializable {
@@ -39,6 +48,8 @@ public class TrackSelectionController implements Initializable {
 
     private static Config config;
 
+    private static Map<Long, PlayerMetaData> playersMetadata = new HashMap<>();
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         config = StartController.getConfig();
@@ -59,15 +70,75 @@ public class TrackSelectionController implements Initializable {
             return;
         }
 
+        serializeConfig();
+        sendDataToServer();
+        waitForStart();
+
+        //Platform.exit();
+    }
+
+    private void serializeConfig() {
         if (rbTrack1.isSelected()) {
-        config.setTrack(1); }
+            config.setTrack(1); }
         else {
             config.setTrack(2);
         }
         config.setNumLaps((int) sliderNumOfLaps.getValue());
-
         SerializerDeserializer.saveConfig(config);
+    }
 
-        Platform.exit();
+
+    private void sendDataToServer() {
+        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)){
+            ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
+            System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
+            System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
+
+            PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
+                    String.valueOf(clientSocket.getPort()), config,ProcessHandle.current().pid());
+
+            playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
+
+            oos.writeObject(newPlayerMetaData);
+
+            System.out.println("Object metadata sent to server!");
+
+            Integer readObject = (Integer) ois.readObject();
+            System.out.println(readObject);
+            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject.toString());
+            System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void waitForStart() {
+        try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(playersMetadata.get(ProcessHandle.current().pid()).getPort()))) {
+            System.err.println("Server listening on port:" + serverSocket.getLocalPort());
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.err.println("Client connected from port: " + clientSocket.getPort());
+
+                new Thread(() -> processSerializableClient(clientSocket)).start();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void processSerializableClient(Socket clientSocket) {
+        try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())){
+            String answer = (String) ois.readObject();
+            System.err.println(answer);
+
+            if (answer == "Start") {
+                Platform.exit();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

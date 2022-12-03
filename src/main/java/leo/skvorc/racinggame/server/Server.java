@@ -50,40 +50,39 @@ public class Server {
                     playerMetaData.getPort() + " " +
                     playerMetaData.getPid());
 
+            players.put(playerMetaData.getPid(), playerMetaData);
+            System.out.println(playerMetaData.getPort());
             oos.writeObject(clientSocket.getPort());
 
             System.out.println("Object sent");
-            /*if(players.size() < 2) {
-                System.out.println("Adding a new player to the game!");
-                players.put(playerMetaData.getPid(), playerMetaData);
-                oos.writeObject("SUCCESS");
-            }
-            else {
-                //message sent to the second client
-                oos.writeObject("ERROR");
-            }
 
             if(players.size() == 2) {
-                System.out.println("Two players joined!");
-                //message sent to the second client
-                oos.writeObject("SUCCESS");
-
-                Long pidFirstPlayer =
-                        players.keySet().stream().filter(p -> !p.equals(playerMetaData.getPid())).findFirst().get();
-
-                PlayerMetaData firstPlayerMetaData = players.get(pidFirstPlayer);
-
-                Socket firstClientSocket = new Socket(firstPlayerMetaData.getIpAddress(),
-                        Integer.parseInt(firstPlayerMetaData.getPort()));
-                ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
-                ObjectInputStream oisFirstClient = new ObjectInputStream(firstClientSocket.getInputStream());
-                System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" +firstClientSocket.getPort());
-                oos.writeObject("SUCCESS");
-            }*/
-
+                startGame(playerMetaData.getPid());
+            }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void startGame(Long pid) throws IOException {
+        System.out.println("Two players joined!");
+
+        Long pidFirstPlayer = players.keySet().stream().filter(p -> !p.equals(pid)).findFirst().get();
+        Long pidSecondPlayer = players.keySet().stream().filter(p -> p.equals(pid)).findFirst().get();
+
+        PlayerMetaData firstPlayerMetaData = players.get(pidFirstPlayer);
+        PlayerMetaData secondPlayerMetaData = players.get(pidSecondPlayer);
+
+        sendStart(firstPlayerMetaData.getIpAddress(), Integer.parseInt(firstPlayerMetaData.getPort()));
+        sendStart(secondPlayerMetaData.getIpAddress(), Integer.parseInt(secondPlayerMetaData.getPort()));
+
+    }
+
+    private static void sendStart(String ipAddress, int port) throws IOException {
+        Socket firstClientSocket = new Socket(ipAddress,port);
+        ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
+        System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" +firstClientSocket.getPort());
+        oosFirstClient.writeObject("START");
     }
 
 }

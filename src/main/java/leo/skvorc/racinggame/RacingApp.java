@@ -64,31 +64,7 @@ public class RacingApp extends GameApplication {
 
         config = SerializerDeserializer.loadConfig();
 
-        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)){
-            ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
-            System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
-            System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
-
-            PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
-                    String.valueOf(clientSocket.getPort()), config.getPlayer1().getPlayerName(),
-                    ProcessHandle.current().pid());
-
-            playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
-
-            oos.writeObject(newPlayerMetaData);
-
-            System.out.println("Object metadata sent to server!");
-
-            if (ois.available() > 0){
-                System.out.println("Confirmation read from the server!");
-            }
-            Integer readObject = (Integer) ois.readObject();
-            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject.toString());
-            System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        network();
 
         getGameWorld().addEntityFactory(new RacingFactory(config));
 
@@ -126,6 +102,14 @@ public class RacingApp extends GameApplication {
         onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> moveDirection.LeftCollision(car));
     }
 
+    @Override
+    protected void onUpdate(double tpf) {
+        System.err.println("Player position:");
+        System.out.println(player1.getX());
+        System.out.println(player1.getY());
+        System.out.println(player1.getRotation());
+    }
+
     private boolean checkLastLap(int lapCounter) {
         return lapCounter >= config.getNumLaps();
     }
@@ -144,5 +128,32 @@ public class RacingApp extends GameApplication {
     private void newGame() {
         SerializerDeserializer.saveConfig(config);
         getGameController().startNewGame();
+    }
+
+    private void network() {
+
+        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)){
+            ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
+            System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
+            System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
+
+            PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
+                    String.valueOf(clientSocket.getPort()), config.getPlayer1().getPlayerName(),
+                    ProcessHandle.current().pid());
+
+            playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
+
+            oos.writeObject(newPlayerMetaData);
+
+            System.out.println("Object metadata sent to server!");
+
+            Integer readObject = (Integer) ois.readObject();
+            System.err.println(readObject);
+            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject.toString());
+            System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
