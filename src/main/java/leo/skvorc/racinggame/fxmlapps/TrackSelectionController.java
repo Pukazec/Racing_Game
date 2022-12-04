@@ -1,7 +1,5 @@
 package leo.skvorc.racinggame.fxmlapps;
 
-import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
@@ -14,6 +12,7 @@ import leo.skvorc.racinggame.model.PlayerMetaData;
 import leo.skvorc.racinggame.server.Server;
 import leo.skvorc.racinggame.utils.ImageLoader;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
+import leo.skvorc.racinggame.utils.SocketListener;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -25,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class TrackSelectionController implements Initializable {
+public class TrackSelectionController extends SocketListener implements Initializable {
 
     @FXML
     private RadioButton rbTrack1;
@@ -73,9 +72,8 @@ public class TrackSelectionController implements Initializable {
 
         serializeConfig();
         sendDataToServer();
-        waitForStart();
-
-        //Platform.exit();
+        lblError.setText("Waiting for players");
+        this.acceptRequests(playersMetadata.get(ProcessHandle.current().pid()).getPort());
     }
 
     private void serializeConfig() {
@@ -98,15 +96,12 @@ public class TrackSelectionController implements Initializable {
 
             PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
                     clientSocket.getPort(), config,ProcessHandle.current().pid());
-
             playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
 
             oos.writeObject(newPlayerMetaData);
-
             System.out.println("Object metadata sent to server!");
 
             Integer readObject = (Integer) ois.readObject();
-            System.out.println(readObject);
             playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject);
             System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
         } catch (IOException | ClassNotFoundException e) {
@@ -114,23 +109,8 @@ public class TrackSelectionController implements Initializable {
         }
     }
 
-    private void waitForStart() {
-        try (ServerSocket serverSocket = new ServerSocket(playersMetadata.get(ProcessHandle.current().pid()).getPort())) {
-            System.err.println("Server listening on port:" + serverSocket.getLocalPort());
-
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
-                System.err.println("Client connected from port: " + clientSocket.getPort());
-
-                new Thread(() -> processSerializableClient(clientSocket)).start();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void processSerializableClient(Socket clientSocket) {
+    @Override
+    public void processSerializableClient(Socket clientSocket) {
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())){
             String answer = (String) ois.readObject();
             System.err.println(answer);
