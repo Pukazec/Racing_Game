@@ -9,7 +9,7 @@ public class PlayerMetaData implements Serializable {
     private static final long serialVersionUID = 850L;
 
     private String ipAddress;
-    private String port;
+    private Integer port;
     private String playerName;
     private Config config;
     private Integer posX;
@@ -20,21 +20,21 @@ public class PlayerMetaData implements Serializable {
     public PlayerMetaData() {
     }
 
-    public PlayerMetaData(String ipAddress, String port, String playerName, Long pid) {
+    public PlayerMetaData(String ipAddress, Integer port, String playerName, Long pid) {
         this.ipAddress = ipAddress;
         this.port = port;
         this.playerName = playerName;
         this.pid = pid;
     }
 
-    public PlayerMetaData(String ipAddress, String port, Config config, Long pid) {
+    public PlayerMetaData(String ipAddress, Integer port, Config config, Long pid) {
         this.ipAddress = ipAddress;
         this.port = port;
         this.config = config;
         this.pid = pid;
     }
 
-    public PlayerMetaData(String ipAddress, String port, String playerName, Integer posX, Integer posY, Integer rotation, Long pid) {
+    public PlayerMetaData(String ipAddress, Integer port, String playerName, Integer posX, Integer posY, Integer rotation, Long pid) {
         this.ipAddress = ipAddress;
         this.port = port;
         this.playerName = playerName;
@@ -52,11 +52,11 @@ public class PlayerMetaData implements Serializable {
         this.ipAddress = ipAddress;
     }
 
-    public String getPort() {
+    public Integer getPort() {
         return port;
     }
 
-    public void setPort(String port) {
+    public void setPort(Integer port) {
         this.port = port;
     }
 

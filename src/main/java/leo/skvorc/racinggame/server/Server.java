@@ -44,6 +44,7 @@ public class Server {
              ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())){
 
             PlayerMetaData playerMetaData = (PlayerMetaData) ois.readObject();
+            playerMetaData.setPort(clientSocket.getPort());
             System.out.println("Connected player metadata: " +
                     playerMetaData.getPlayerName() + " " +
                     playerMetaData.getIpAddress() + " " +
@@ -73,8 +74,8 @@ public class Server {
         PlayerMetaData firstPlayerMetaData = players.get(pidFirstPlayer);
         PlayerMetaData secondPlayerMetaData = players.get(pidSecondPlayer);
 
-        sendStart(firstPlayerMetaData.getIpAddress(), Integer.parseInt(firstPlayerMetaData.getPort()));
-        sendStart(secondPlayerMetaData.getIpAddress(), Integer.parseInt(secondPlayerMetaData.getPort()));
+        sendStart(firstPlayerMetaData.getIpAddress(), firstPlayerMetaData.getPort());
+        sendStart(secondPlayerMetaData.getIpAddress(), secondPlayerMetaData.getPort());
 
     }
 

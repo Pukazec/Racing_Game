@@ -1,5 +1,6 @@
 package leo.skvorc.racinggame.fxmlapps;
 
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -96,7 +97,7 @@ public class TrackSelectionController implements Initializable {
             System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
 
             PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
-                    String.valueOf(clientSocket.getPort()), config,ProcessHandle.current().pid());
+                    clientSocket.getPort(), config,ProcessHandle.current().pid());
 
             playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
 
@@ -106,7 +107,7 @@ public class TrackSelectionController implements Initializable {
 
             Integer readObject = (Integer) ois.readObject();
             System.out.println(readObject);
-            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject.toString());
+            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject);
             System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -114,7 +115,7 @@ public class TrackSelectionController implements Initializable {
     }
 
     private void waitForStart() {
-        try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(playersMetadata.get(ProcessHandle.current().pid()).getPort()))) {
+        try (ServerSocket serverSocket = new ServerSocket(playersMetadata.get(ProcessHandle.current().pid()).getPort())) {
             System.err.println("Server listening on port:" + serverSocket.getLocalPort());
 
             while (true) {
@@ -134,9 +135,7 @@ public class TrackSelectionController implements Initializable {
             String answer = (String) ois.readObject();
             System.err.println(answer);
 
-            if (answer == "Start") {
-                Platform.exit();
-            }
+            System.exit(0);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

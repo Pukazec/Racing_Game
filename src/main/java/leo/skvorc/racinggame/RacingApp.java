@@ -139,7 +139,7 @@ public class RacingApp extends GameApplication {
             System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
 
             PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
-                    String.valueOf(clientSocket.getPort()), config.getPlayer1().getPlayerName(),
+                    clientSocket.getPort(), config.getPlayer1().getPlayerName(),
                     ProcessHandle.current().pid());
 
             playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
@@ -150,7 +150,7 @@ public class RacingApp extends GameApplication {
 
             Integer readObject = (Integer) ois.readObject();
             System.err.println(readObject);
-            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject.toString());
+            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject);
             System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
