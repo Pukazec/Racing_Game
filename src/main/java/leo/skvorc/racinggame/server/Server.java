@@ -16,6 +16,7 @@ public class Server {
     public static final int PORT = 850;
 
     private static Map<Long, PlayerMetaData> players = new HashMap<>();
+    private static Map<Long, PlayerMetaData> playerPorts = new HashMap<>();
 
     public static void main(String[] args) {
         acceptRequests();
@@ -56,13 +57,39 @@ public class Server {
             oos.writeObject(clientSocket.getPort());
 
             System.out.println("Object sent");
-
-            if(players.size() == 2) {
+/*
+            if (players.size() == 2) {
                 startGame(playerMetaData.getPid());
             }
+            if (players.size() > 2) {*/
+                playerPorts.put(playerMetaData.getPid(), playerMetaData);
+                if (playerPorts.size() == 2) {
+                    initPorts(playerMetaData.getPid());
+                }
+            //}
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void initPorts(Long pid) throws IOException {
+        System.out.println("Two players start!");
+
+        Long pidFirstPlayer = playerPorts.keySet().stream().filter(p -> !p.equals(pid)).findFirst().get();
+        Long pidSecondPlayer = playerPorts.keySet().stream().filter(p -> p.equals(pid)).findFirst().get();
+
+        PlayerMetaData firstPlayerMetaData = playerPorts.get(pidFirstPlayer);
+        PlayerMetaData secondPlayerMetaData = playerPorts.get(pidSecondPlayer);
+
+        sendPorts(firstPlayerMetaData, secondPlayerMetaData);
+        sendPorts(secondPlayerMetaData, firstPlayerMetaData);
+    }
+
+    private static void sendPorts(PlayerMetaData playerMetaData, PlayerMetaData sendData) throws IOException {
+        Socket firstClientSocket = new Socket(playerMetaData.getIpAddress(),playerMetaData.getPort());
+        ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
+        System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" +firstClientSocket.getPort());
+        oosFirstClient.writeObject(sendData);
     }
 
     private static void startGame(Long pid) throws IOException {
@@ -76,7 +103,6 @@ public class Server {
 
         sendStart(firstPlayerMetaData.getIpAddress(), firstPlayerMetaData.getPort());
         sendStart(secondPlayerMetaData.getIpAddress(), secondPlayerMetaData.getPort());
-
     }
 
     private static void sendStart(String ipAddress, int port) throws IOException {

@@ -6,6 +6,7 @@ import com.almasb.fxgl.entity.Entity;
 import javafx.scene.input.KeyCode;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.model.PlayerMetaData;
+import leo.skvorc.racinggame.model.PlayerPosition;
 import leo.skvorc.racinggame.server.Server;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
@@ -13,6 +14,7 @@ import leo.skvorc.racinggame.utils.SerializerDeserializer;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,12 +41,67 @@ public class RacingApp extends GameApplication {
         launch(args);
     }
 
+    //region Initialization
     @Override
     protected void initSettings(GameSettings gameSettings) {
         gameSettings.setTitle("Racing game");
         gameSettings.setFullScreenFromStart(true);
         gameSettings.setWidth(15 * 128);
         gameSettings.setHeight(8 * 128);
+
+        initNetwork();
+    }
+
+    private void initNetwork() {
+        sendPort();
+        recivePort();
+    }
+
+    private void sendPort() {
+        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)){
+            ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
+
+            PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
+                    clientSocket.getPort(), config,ProcessHandle.current().pid());
+            playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
+
+            oos.writeObject(newPlayerMetaData);
+
+            Integer readObject = (Integer) ois.readObject();
+            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject);
+            System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void recivePort() {
+        try (ServerSocket serverSocket = new ServerSocket(playersMetadata.get(ProcessHandle.current().pid()).getPort())) {
+            System.err.println("Server listening on port:" + serverSocket.getLocalPort());
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.err.println("Client connected from port: " + clientSocket.getPort());
+
+                new Thread(() -> loadPort(clientSocket)).start();
+                serverSocket.close();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadPort(Socket clientSocket) {
+        try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())){
+            PlayerMetaData answer = (PlayerMetaData) ois.readObject();
+            System.err.println(answer);
+
+            playersMetadata.put(answer.getPid(), answer);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -59,12 +116,11 @@ public class RacingApp extends GameApplication {
         onKey(KeyCode.RIGHT, () -> moveDirection.TurnRight(player2, 1));
     }
 
+    //endregion
     @Override
     protected void initGame() throws RuntimeException {
 
         config = SerializerDeserializer.loadConfig();
-
-        network();
 
         getGameWorld().addEntityFactory(new RacingFactory(config));
 
@@ -76,8 +132,12 @@ public class RacingApp extends GameApplication {
         player2.rotateBy(-90);
 
         loopBGM("avalanche.mp3");
+        new Thread(() -> networkListener()).start();
+        new Thread(() -> setupSocket()).start();
     }
 
+
+    //region Physics
     @Override
     protected void initPhysics() {
         onCollisionBegin(EntityType.PLAYER, EntityType.FINISH, (car, finish) -> {
@@ -102,14 +162,6 @@ public class RacingApp extends GameApplication {
         onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> moveDirection.LeftCollision(car));
     }
 
-    @Override
-    protected void onUpdate(double tpf) {
-        System.err.println("Player position:");
-        System.out.println(player1.getX());
-        System.out.println(player1.getY());
-        System.out.println(player1.getRotation());
-    }
-
     private boolean checkLastLap(int lapCounter) {
         return lapCounter >= config.getNumLaps();
     }
@@ -129,31 +181,51 @@ public class RacingApp extends GameApplication {
         SerializerDeserializer.saveConfig(config);
         getGameController().startNewGame();
     }
+    //endregion
 
-    private void network() {
-
-        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)){
+    @Override
+    protected void onUpdate(double tpf) {
+        Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
+        PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
+        try (Socket clientSocket = new Socket(Server.HOST, secondPlayerMetaData.getPort())){
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
-            System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
-            System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
 
-            PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
-                    clientSocket.getPort(), config.getPlayer1().getPlayerName(),
-                    ProcessHandle.current().pid());
+            PlayerPosition playerPosition = new PlayerPosition(player1.getX(),player1.getY(),player1.getRotation());
 
-            playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
-
-            oos.writeObject(newPlayerMetaData);
-
-            System.out.println("Object metadata sent to server!");
-
-            Integer readObject = (Integer) ois.readObject();
-            System.err.println(readObject);
-            playersMetadata.get(ProcessHandle.current().pid()).setPort(readObject);
-            System.err.println("Player port: " + playersMetadata.get(ProcessHandle.current().pid()).getPort());
-        } catch (IOException | ClassNotFoundException e) {
+            oos.writeObject(playerPosition);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+    //region Network
+
+    private void setupSocket() {
+    }
+    private void networkListener() {
+        try (ServerSocket serverSocket = new ServerSocket(playersMetadata.get(ProcessHandle.current().pid()).getPort())) {
+            System.err.println("Server listening for updates on port:" + serverSocket.getLocalPort());
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.err.println("Client connected from port: " + clientSocket.getPort());
+
+                new Thread(() -> processSerializableClient(clientSocket)).start();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void processSerializableClient(Socket clientSocket) {
+        try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())){
+            PlayerPosition answer = (PlayerPosition) ois.readObject();
+            player2.setPosition(answer.getPosX(), answer.getPosY());
+            player2.setRotation(answer.getRotation());
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    //endregion
 }
