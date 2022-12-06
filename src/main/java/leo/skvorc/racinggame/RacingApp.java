@@ -133,7 +133,7 @@ public class RacingApp extends GameApplication {
 
         loopBGM("avalanche.mp3");
         new Thread(() -> networkListener()).start();
-        new Thread(() -> setupSocket()).start();
+        //new Thread(() -> setupSocket()).start();
     }
 
 
@@ -188,27 +188,27 @@ public class RacingApp extends GameApplication {
         Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
         PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
         try (Socket clientSocket = new Socket(Server.HOST, secondPlayerMetaData.getPort())){
+            System.err.println("Sending data to " + secondPlayerMetaData.getPort());
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
 
             PlayerPosition playerPosition = new PlayerPosition(player1.getX(),player1.getY(),player1.getRotation());
 
             oos.writeObject(playerPosition);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("Error sending data");;
         }
     }
 
     //region Network
 
-    private void setupSocket() {
-    }
+    //private void setupSocket() { }
     private void networkListener() {
         try (ServerSocket serverSocket = new ServerSocket(playersMetadata.get(ProcessHandle.current().pid()).getPort())) {
             System.err.println("Server listening for updates on port:" + serverSocket.getLocalPort());
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.err.println("Client connected from port: " + clientSocket.getPort());
+                System.err.println("Racing game connected from port: " + clientSocket.getPort());
 
                 new Thread(() -> processSerializableClient(clientSocket)).start();
             }
