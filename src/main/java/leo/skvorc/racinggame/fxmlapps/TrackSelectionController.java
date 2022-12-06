@@ -11,19 +11,18 @@ import leo.skvorc.racinggame.Config;
 import leo.skvorc.racinggame.model.PlayerMetaData;
 import leo.skvorc.racinggame.server.Server;
 import leo.skvorc.racinggame.utils.ImageLoader;
-import leo.skvorc.racinggame.utils.SerializerDeserializer;
-import leo.skvorc.racinggame.utils.SocketListener;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-public class TrackSelectionController extends SocketListener implements Initializable {
+public class TrackSelectionController implements Initializable {
 
     @FXML
     private RadioButton rbTrack1;
@@ -62,9 +61,8 @@ public class TrackSelectionController extends SocketListener implements Initiali
         rbTrack2.setSelected(true);
     }
 
-    public void startRacing(){
-        if (radioButtonGroup.getSelectedToggle() == null
-                || !radioButtonGroup.getSelectedToggle().isSelected()) {
+    public void startRacing() {
+        if (radioButtonGroup.getSelectedToggle() == null || !radioButtonGroup.getSelectedToggle().isSelected()) {
             lblError.setText("Fill all fields");
             return;
         }
@@ -72,29 +70,29 @@ public class TrackSelectionController extends SocketListener implements Initiali
         serializeConfig();
         sendDataToServer();
         lblError.setText("Waiting for players");
-        this.acceptRequests(playersMetadata.get(ProcessHandle.current().pid()).getPort());
+        acceptRequests(playersMetadata.get(ProcessHandle.current().pid()).getPort());
     }
 
     private void serializeConfig() {
         if (rbTrack1.isSelected()) {
-            config.setTrack(1); }
-        else {
+            config.setTrack(1);
+        } else {
             config.setTrack(2);
         }
         config.setNumLaps((int) sliderNumOfLaps.getValue());
-        SerializerDeserializer.saveConfig(config);
+        // SerializerDeserializer.saveConfig(config);
     }
 
 
     private void sendDataToServer() {
-        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)){
+        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)) {
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
             System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
             System.out.println("Connecting to address: " + clientSocket.getLocalAddress().toString().substring(1));
 
             PlayerMetaData newPlayerMetaData = new PlayerMetaData(clientSocket.getLocalAddress().toString().substring(1),
-                    clientSocket.getPort(), config,ProcessHandle.current().pid());
+                    clientSocket.getPort(), config, ProcessHandle.current().pid());
             playersMetadata.put(ProcessHandle.current().pid(), newPlayerMetaData);
 
             oos.writeObject(newPlayerMetaData);
@@ -108,9 +106,24 @@ public class TrackSelectionController extends SocketListener implements Initiali
         }
     }
 
-    @Override
+    private void acceptRequests(Integer port) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.err.println("Server listening on port:" + serverSocket.getLocalPort());
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.err.println("Client connected from port: " + clientSocket.getPort());
+
+                new Thread(() -> processSerializableClient(clientSocket)).start();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void processSerializableClient(Socket clientSocket) {
-        try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())){
+        try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())) {
             String answer = (String) ois.readObject();
             System.err.println(answer);
 

@@ -27,16 +27,6 @@ public class StartController implements Initializable {
     @FXML
     private RadioButton yellow1;
     @FXML
-    private TextField txtP2;
-    @FXML
-    private RadioButton black2;
-    @FXML
-    private RadioButton orange2;
-    @FXML
-    private RadioButton green2;
-    @FXML
-    private RadioButton yellow2;
-    @FXML
     private Label lblError;
     private ToggleGroup radioButtonGroup1;
     private ToggleGroup radioButtonGroup2;
@@ -56,20 +46,11 @@ public class StartController implements Initializable {
         orange1.setToggleGroup(radioButtonGroup1);
         green1.setToggleGroup(radioButtonGroup1);
         yellow1.setToggleGroup(radioButtonGroup1);
-        radioButtonGroup2 = new ToggleGroup();
-        black2.setToggleGroup(radioButtonGroup2);
-        orange2.setToggleGroup(radioButtonGroup2);
-        green2.setToggleGroup(radioButtonGroup2);
-        yellow2.setToggleGroup(radioButtonGroup2);
-        validationFields.add(txtP1);
-        validationFields.add(txtP2);
 
 
         //TODO remove mock data
         txtP1.setText("Mirko");
-        txtP2.setText("Slavko");
         orange1.setSelected(true);
-        yellow2.setSelected(true);
     }
 
     public void selectTrack() throws IOException {
@@ -79,13 +60,9 @@ public class StartController implements Initializable {
         }
 
         String color1 = ((RadioButton) radioButtonGroup1.getSelectedToggle()).getId();
-        String color2 = ((RadioButton) radioButtonGroup2.getSelectedToggle()).getId();
         color1 = color1.replace(color1.substring(color1.length() - 1), "").toUpperCase();
-        color2 = color2.replace(color2.substring(color2.length() - 1), "").toUpperCase();
 
-        config = new Config(
-                        new PlayerDetails(txtP1.getText(), CarColor.valueOf(color1)),
-                        new PlayerDetails(txtP2.getText(), CarColor.valueOf(color2)));
+        config = new Config(new PlayerDetails(txtP1.getText(), CarColor.valueOf(color1)));
 
         FxmlUtils.showScreen("trackSelection.fxml", StartApplication.getMainStage());
     }
@@ -94,8 +71,7 @@ public class StartController implements Initializable {
         for (TextField field : validationFields) {
             if (field.getText().trim().isBlank()) { return true; }
         }
-        if (radioButtonGroup1.getSelectedToggle() == null || radioButtonGroup2.getSelectedToggle() == null
-                || !radioButtonGroup1.getSelectedToggle().isSelected() || !radioButtonGroup2.getSelectedToggle().isSelected()) {
+        if (radioButtonGroup1.getSelectedToggle() == null || !radioButtonGroup1.getSelectedToggle().isSelected() ) {
             return true;
         }
 

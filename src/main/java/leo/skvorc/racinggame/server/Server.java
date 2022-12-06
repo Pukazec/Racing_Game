@@ -1,6 +1,8 @@
 package leo.skvorc.racinggame.server;
 
+import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.model.PlayerMetaData;
+import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -57,13 +59,14 @@ public class Server {
             oos.writeObject(clientSocket.getPort());
 
             System.out.println("Object sent");
-/*
-            if (players.size() == 2) {
+
+            /*if (players.size() == 2) {
                 startGame(playerMetaData.getPid());
+                writeConfig(playerMetaData.getPid(), playerMetaData.getConfig().getPlayer1());
             }
-            if (players.size() > 2) {*/
+            if (players.size() >= 2) {*/
                 playerPorts.put(playerMetaData.getPid(), playerMetaData);
-                if (playerPorts.size() == 2) {
+                if (playerPorts.size() == 4) {
                     initPorts(playerMetaData.getPid());
                 }
             //}
@@ -110,6 +113,13 @@ public class Server {
         ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
         System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" +firstClientSocket.getPort());
         oosFirstClient.writeObject("START");
+    }
+
+    private static void writeConfig(Long pid, PlayerDetails player) {
+        Long pidPlayer = playerPorts.keySet().stream().filter(p -> !p.equals(pid)).findFirst().get();
+        PlayerMetaData playerMetaData = playerPorts.get(pidPlayer);
+        playerMetaData.getConfig().setPlayer2(player);
+        SerializerDeserializer.saveConfig(playerMetaData.getConfig());
     }
 
 }
