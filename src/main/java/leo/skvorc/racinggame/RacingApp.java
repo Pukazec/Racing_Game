@@ -16,6 +16,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ public class RacingApp extends GameApplication {
     private int lapCounterP2 = 0;
     private boolean p1LastLap = false;
     private boolean p2LastLap = false;
+    private Socket clientSocket;
 
     public static void main(String[] args) {
         launch(args);
@@ -88,7 +90,10 @@ public class RacingApp extends GameApplication {
                 serverSocket.close();
             }
 
-        } catch (IOException e) {
+        } catch (SocketException se){
+            System.err.println("Socket closed");
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -96,7 +101,7 @@ public class RacingApp extends GameApplication {
     private void loadPort(Socket clientSocket) {
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())){
             PlayerMetaData answer = (PlayerMetaData) ois.readObject();
-            System.err.println(answer);
+            //System.err.println(answer);
 
             playersMetadata.put(answer.getPid(), answer);
         } catch (IOException | ClassNotFoundException e) {
@@ -134,6 +139,17 @@ public class RacingApp extends GameApplication {
         loopBGM("avalanche.mp3");
         new Thread(() -> networkListener()).start();
         //new Thread(() -> setupSocket()).start();
+        initSendingSocket();
+    }
+
+    private void initSendingSocket() {
+        Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
+        PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
+        try {
+            clientSocket = new Socket(Server.HOST, secondPlayerMetaData.getPort());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -185,11 +201,10 @@ public class RacingApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
-        Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
-        PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
-        try (Socket clientSocket = new Socket(Server.HOST, secondPlayerMetaData.getPort())){
-            System.err.println("Sending data to " + secondPlayerMetaData.getPort());
-            ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+        System.err.println("Send Update");
+        ObjectOutputStream oos = null;
+        try {
+            oos = new ObjectOutputStream(clientSocket.getOutputStream());
 
             PlayerPosition playerPosition = new PlayerPosition(player1.getX(),player1.getY(),player1.getRotation());
 
