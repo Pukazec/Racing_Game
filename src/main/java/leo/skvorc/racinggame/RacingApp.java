@@ -3,6 +3,7 @@ package leo.skvorc.racinggame;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
+import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.model.PlayerMetaData;
@@ -34,9 +35,7 @@ public class RacingApp extends GameApplication {
     private Entity player2;
 
     private int lapCounterP1 = 0;
-    private int lapCounterP2 = 0;
     private boolean p1LastLap = false;
-    private boolean p2LastLap = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -45,6 +44,9 @@ public class RacingApp extends GameApplication {
     //region Initialization
     @Override
     protected void initSettings(GameSettings gameSettings) {
+        config = SerializerDeserializer.loadConfig();
+        System.out.println(config.getPlayer1());
+        System.out.println(config.getPlayer2());
         gameSettings.setTitle("Racing game");
         gameSettings.setFullScreenFromStart(true);
         gameSettings.setWidth(15 * 128);
@@ -55,7 +57,7 @@ public class RacingApp extends GameApplication {
 
     private void initNetwork() {
         sendPort();
-        recivePort();
+        receivePort();
     }
 
     private void sendPort() {
@@ -77,17 +79,14 @@ public class RacingApp extends GameApplication {
         }
     }
 
-    private void recivePort() {
+    private void receivePort() {
         try (ServerSocket serverSocket = new ServerSocket(playersMetadata.get(ProcessHandle.current().pid()).getPort())) {
             System.err.println("Server listening on port:" + serverSocket.getLocalPort());
 
-            while (true) {
                 Socket clientSocket = serverSocket.accept();
                 System.err.println("Client connected from port: " + clientSocket.getPort());
 
                 new Thread(() -> loadPort(clientSocket)).start();
-                serverSocket.close();
-            }
 
         } catch (SocketException se) {
             System.err.println("Socket closed");
@@ -141,19 +140,12 @@ public class RacingApp extends GameApplication {
     @Override
     protected void initPhysics() {
         onCollisionBegin(EntityType.PLAYER, EntityType.FINISH, (car, finish) -> {
-
             p1LastLap = checkLastLap(lapCounterP1);
-            p2LastLap = checkLastLap(lapCounterP2);
 
             checkWin(lapCounterP1, p1LastLap, config.getPlayer1());
-            checkWin(lapCounterP2, p2LastLap, config.getPlayer2());
 
             if (car.equals(player1)) {
                 lapCounterP1++;
-            }
-
-            if (car.equals(player2)) {
-                lapCounterP2++;
             }
         });
 
@@ -169,17 +161,24 @@ public class RacingApp extends GameApplication {
     private void checkWin(int lapCounter, boolean lastLap, PlayerDetails player) {
         if (lapCounter == config.getNumLaps() + 1 && lastLap) {
             showMessage("Player " + player.getPlayerName() + " won!", () -> {
-                lapCounterP1 = 0;
-                lapCounterP2 = 0;
-                player.recordWin();
-                newGame();
+                sendWin();
             });
         }
     }
 
-    private void newGame() {
-        SerializerDeserializer.saveConfig(config);
-        getGameController().startNewGame();
+    private void sendWin() {
+        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)) {
+            ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
+            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
+
+            oos.writeObject(ProcessHandle.current().pid());
+
+            PlayerMetaData readObject = (PlayerMetaData) ois.readObject();
+            System.err.println(readObject);
+            Platform.exit();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
     //endregion
 
@@ -206,7 +205,6 @@ public class RacingApp extends GameApplication {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.err.println("Racing game connected from port: " + clientSocket.getPort());
 
                 new Thread(() -> processSerializableClient(clientSocket)).start();
             }

@@ -20,6 +20,8 @@ public class Server {
     private static Map<Long, PlayerMetaData> players = new HashMap<>();
     private static Map<Long, PlayerMetaData> playerPorts = new HashMap<>();
 
+    private int connectionNumber = 0;
+
     public static void main(String[] args) {
         acceptRequests();
     }
@@ -44,21 +46,23 @@ public class Server {
         System.err.println("Processing...");
 
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
-             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())){
+             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())) {
 
-            PlayerMetaData playerMetaData = (PlayerMetaData) ois.readObject();
-            playerMetaData.setPort(clientSocket.getPort());
-            System.out.println("Connected player metadata: " +
-                    playerMetaData.getPlayerName() + " " +
-                    playerMetaData.getIpAddress() + " " +
-                    playerMetaData.getPort() + " " +
-                    playerMetaData.getPid());
+            //region Init Racing
+            if (playerPorts.size() <= 2) {
+                PlayerMetaData playerMetaData = (PlayerMetaData) ois.readObject();
+                playerMetaData.setPort(clientSocket.getPort());
+                System.out.println("Connected player metadata: " +
+                        playerMetaData.getPlayerName() + " " +
+                        playerMetaData.getIpAddress() + " " +
+                        playerMetaData.getPort() + " " +
+                        playerMetaData.getPid());
 
-            players.put(playerMetaData.getPid(), playerMetaData);
-            System.out.println(playerMetaData.getPort());
-            oos.writeObject(clientSocket.getPort());
+                players.put(playerMetaData.getPid(), playerMetaData);
+                System.out.println(playerMetaData.getPort());
+                oos.writeObject(clientSocket.getPort());
 
-            System.out.println("Object sent");
+                System.out.println("Object sent");
 
             /*if (players.size() == 2) {
                 startGame(playerMetaData.getPid());
@@ -66,15 +70,48 @@ public class Server {
             }
             if (players.size() >= 2) {*/
                 playerPorts.put(playerMetaData.getPid(), playerMetaData);
-                if (playerPorts.size() == 4) {
+                if (playerPorts.size() == 2/*TODO*/) {
                     initPorts(playerMetaData.getPid());
                 }
-            //}
+                //}*/
+            }
+            //endregion
+
+
+            //region Finish racing
+            if (playerPorts.size() > 2) {
+                Long playerPid = (Long) ois.readObject();
+                recordWin(playerPid);
+            }
+            //endregion
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
 
+    //region StartApplication
+    private static void startGame(Long pid) throws IOException {
+        System.out.println("Two players joined!");
+
+        Long pidFirstPlayer = players.keySet().stream().filter(p -> !p.equals(pid)).findFirst().get();
+        Long pidSecondPlayer = players.keySet().stream().filter(p -> p.equals(pid)).findFirst().get();
+
+        PlayerMetaData firstPlayerMetaData = players.get(pidFirstPlayer);
+        PlayerMetaData secondPlayerMetaData = players.get(pidSecondPlayer);
+
+        sendStart(firstPlayerMetaData.getIpAddress(), firstPlayerMetaData.getPort());
+        sendStart(secondPlayerMetaData.getIpAddress(), secondPlayerMetaData.getPort());
+    }
+
+    private static void writeConfig(Long pid, PlayerDetails player) {
+        Long pidPlayer = players.keySet().stream().filter(p -> !p.equals(pid)).findFirst().get();
+        PlayerMetaData playerMetaData = players.get(pidPlayer);
+        playerMetaData.getConfig().setPlayer2(player);
+        SerializerDeserializer.saveConfig(playerMetaData.getConfig());
+    }
+    //endregion
+
+    //region Racing start
     private static void initPorts(Long pid) throws IOException {
         System.out.println("Two players start!");
 
@@ -89,37 +126,28 @@ public class Server {
     }
 
     private static void sendPorts(PlayerMetaData playerMetaData, PlayerMetaData sendData) throws IOException {
-        Socket firstClientSocket = new Socket(playerMetaData.getIpAddress(),playerMetaData.getPort());
+        Socket firstClientSocket = new Socket(playerMetaData.getIpAddress(), playerMetaData.getPort());
         ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
-        System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" +firstClientSocket.getPort());
+        System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" + firstClientSocket.getPort());
         oosFirstClient.writeObject(sendData);
     }
 
-    private static void startGame(Long pid) throws IOException {
-        System.out.println("Two players joined!");
-
-        Long pidFirstPlayer = players.keySet().stream().filter(p -> !p.equals(pid)).findFirst().get();
-        Long pidSecondPlayer = players.keySet().stream().filter(p -> p.equals(pid)).findFirst().get();
-
-        PlayerMetaData firstPlayerMetaData = players.get(pidFirstPlayer);
-        PlayerMetaData secondPlayerMetaData = players.get(pidSecondPlayer);
-
-        sendStart(firstPlayerMetaData.getIpAddress(), firstPlayerMetaData.getPort());
-        sendStart(secondPlayerMetaData.getIpAddress(), secondPlayerMetaData.getPort());
-    }
 
     private static void sendStart(String ipAddress, int port) throws IOException {
-        Socket firstClientSocket = new Socket(ipAddress,port);
+        Socket firstClientSocket = new Socket(ipAddress, port);
         ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
-        System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" +firstClientSocket.getPort());
+        System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" + firstClientSocket.getPort());
         oosFirstClient.writeObject("START");
     }
+    //endregion
 
-    private static void writeConfig(Long pid, PlayerDetails player) {
-        Long pidPlayer = playerPorts.keySet().stream().filter(p -> !p.equals(pid)).findFirst().get();
-        PlayerMetaData playerMetaData = playerPorts.get(pidPlayer);
-        playerMetaData.getConfig().setPlayer2(player);
-        SerializerDeserializer.saveConfig(playerMetaData.getConfig());
+    //region Finish
+    private static void recordWin(Long playerPid) throws IOException {
+        System.out.println("Finnish game!");
+        players.get(playerPid).getConfig().getPlayer1().recordWin();
+
+        initPorts(playerPid);
     }
+    //endregion
 
 }

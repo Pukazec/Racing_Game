@@ -1,5 +1,6 @@
 package leo.skvorc.racinggame;
 
+import com.almasb.fxgl.dsl.EntityBuilder;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.entity.EntityFactory;
 import com.almasb.fxgl.entity.SpawnData;
@@ -21,12 +22,12 @@ public class RacingFactory implements EntityFactory {
 
     @Spawns("player1")
     public Entity newCar1(SpawnData data) {
-        return getPlayer(data, config.getPlayer1());
+        return getPlayer(data, config.getPlayer1(), true);
     }
 
     @Spawns("player2")
     public Entity newCar2(SpawnData data) {
-        return getPlayer(data, config.getPlayer2());
+        return getPlayer(data, config.getPlayer2(), false);
     }
 
     @Spawns("finish")
@@ -45,12 +46,14 @@ public class RacingFactory implements EntityFactory {
     }
 
     @NotNull
-    private Entity getPlayer(SpawnData data, PlayerDetails player) {
-        return entityBuilder(data)
-                .type(EntityType.PLAYER)
-                .viewWithBBox("car" + player.getCarColor() + ".png")
-                .collidable()
-                .buildAndAttach();
+    private Entity getPlayer(SpawnData data, PlayerDetails player, boolean collidable) {
+        EntityBuilder entityBuilder = entityBuilder(data);
+        entityBuilder.type(EntityType.PLAYER);
+        entityBuilder.viewWithBBox("car" + player.getCarColor() + ".png");
+        if (collidable) {
+            entityBuilder.collidable();
+        }
+        return entityBuilder.buildAndAttach();
     }
 
     @NotNull
