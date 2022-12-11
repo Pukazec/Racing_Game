@@ -2,6 +2,7 @@ package leo.skvorc.racinggame.server;
 
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.model.PlayerMetaData;
+import leo.skvorc.racinggame.model.PlayerPosition;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class Server {
     private static Map<Long, PlayerMetaData> players = new HashMap<>();
     private static Map<Long, PlayerMetaData> playerPorts = new HashMap<>();
 
-    private int connectionNumber = 0;
+    private static int connectionNumber = 0;
 
     public static void main(String[] args) {
         acceptRequests();
@@ -44,12 +45,14 @@ public class Server {
 
     private static void processSerializableClient(Socket clientSocket) {
         System.err.println("Processing...");
+        connectionNumber++;
+        System.err.println(connectionNumber);
 
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
              ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())) {
 
             //region Init Racing
-            if (playerPorts.size() <= 2) {
+            if (connectionNumber <= 4/*TODO*/) {
                 PlayerMetaData playerMetaData = (PlayerMetaData) ois.readObject();
                 playerMetaData.setPort(clientSocket.getPort());
                 System.out.println("Connected player metadata: " +
@@ -64,23 +67,24 @@ public class Server {
 
                 System.out.println("Object sent");
 
-            /*if (players.size() == 2) {
-                startGame(playerMetaData.getPid());
-                writeConfig(playerMetaData.getPid(), playerMetaData.getConfig().getPlayer1());
-            }
-            if (players.size() >= 2) {*/
-                playerPorts.put(playerMetaData.getPid(), playerMetaData);
-                if (playerPorts.size() == 2/*TODO*/) {
-                    initPorts(playerMetaData.getPid());
+                if (connectionNumber == 2) {
+                    startGame(playerMetaData.getPid());
+                    writeConfig(playerMetaData.getPid(), playerMetaData.getConfig().getPlayer1());
                 }
-                //}*/
+                if (connectionNumber >= 3) {
+                    playerPorts.put(playerMetaData.getPid(), playerMetaData);
+                    if (connectionNumber == 4/*TODO*/) {
+                        initPorts(playerMetaData.getPid());
+                    }
+                }
             }
             //endregion
 
 
             //region Finish racing
-            if (playerPorts.size() > 2) {
+            if (connectionNumber >= 5) {
                 Long playerPid = (Long) ois.readObject();
+                oos.writeObject("Recording win");
                 recordWin(playerPid);
             }
             //endregion
@@ -146,7 +150,29 @@ public class Server {
         System.out.println("Finnish game!");
         players.get(playerPid).getConfig().getPlayer1().recordWin();
 
-        initPorts(playerPid);
+        Long pidFirstPlayer = playerPorts.keySet().stream().filter(p -> !p.equals(playerPid)).findFirst().get();
+        Long pidSecondPlayer = playerPorts.keySet().stream().filter(p -> p.equals(playerPid)).findFirst().get();
+
+        PlayerMetaData firstPlayerMetaData = playerPorts.get(pidFirstPlayer);
+        PlayerMetaData secondPlayerMetaData = playerPorts.get(pidSecondPlayer);
+
+        sendFinish("Finish", firstPlayerMetaData);
+        sendFinish("Finish", secondPlayerMetaData);
+    }
+
+    private static void sendFinish(String finish, PlayerMetaData playerMetaData) throws IOException {
+        Integer port = playerMetaData.getPort();
+        port++;
+        port++;
+        try (Socket clientSocket = new Socket(playerMetaData.getIpAddress(), port)) {
+            ObjectOutputStream oosFirstClient = new ObjectOutputStream(clientSocket.getOutputStream());
+
+            System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
+
+            oosFirstClient.writeObject(finish);
+        } catch (IOException e) {
+            System.err.println("Error sending data");
+        }
     }
     //endregion
 

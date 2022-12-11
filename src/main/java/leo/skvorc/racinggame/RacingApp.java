@@ -37,6 +37,8 @@ public class RacingApp extends GameApplication {
     private int lapCounterP1 = 0;
     private boolean p1LastLap = false;
 
+    private int startUpdate = 0;
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -57,6 +59,7 @@ public class RacingApp extends GameApplication {
 
     private void initNetwork() {
         sendPort();
+        new Thread(() -> winListener()).start();
         receivePort();
     }
 
@@ -83,10 +86,10 @@ public class RacingApp extends GameApplication {
         try (ServerSocket serverSocket = new ServerSocket(playersMetadata.get(ProcessHandle.current().pid()).getPort())) {
             System.err.println("Server listening on port:" + serverSocket.getLocalPort());
 
-                Socket clientSocket = serverSocket.accept();
-                System.err.println("Client connected from port: " + clientSocket.getPort());
+            Socket clientSocket = serverSocket.accept();
+            System.err.println("Client connected from port: " + clientSocket.getPort());
 
-                new Thread(() -> loadPort(clientSocket)).start();
+            new Thread(() -> loadPort(clientSocket)).start();
 
         } catch (SocketException se) {
             System.err.println("Socket closed");
@@ -111,10 +114,6 @@ public class RacingApp extends GameApplication {
         onKey(KeyCode.S, () -> moveDirection.MoveBackwards(player1));
         onKey(KeyCode.A, () -> moveDirection.TurnLeft(player1, 1));
         onKey(KeyCode.D, () -> moveDirection.TurnRight(player1, 1));
-        onKey(KeyCode.UP, () -> moveDirection.MoveForward(player2));
-        onKey(KeyCode.DOWN, () -> moveDirection.MoveBackwards(player2));
-        onKey(KeyCode.LEFT, () -> moveDirection.TurnLeft(player2, 1));
-        onKey(KeyCode.RIGHT, () -> moveDirection.TurnRight(player2, 1));
     }
 
     //endregion
@@ -128,12 +127,11 @@ public class RacingApp extends GameApplication {
         setLevelFromMap("tmx/track" + config.getTrack() + ".tmx");
 
         player1 = spawn("player1", 1050, 765);
-        player2 = spawn("player2", 1050, 805);
         player1.rotateBy(-90);
-        player2.rotateBy(-90);
+
+        new Thread(this::networkListener).start();
 
         loopBGM("avalanche.mp3");
-        new Thread(this::networkListener).start();
     }
 
     //region Physics
@@ -142,7 +140,7 @@ public class RacingApp extends GameApplication {
         onCollisionBegin(EntityType.PLAYER, EntityType.FINISH, (car, finish) -> {
             p1LastLap = checkLastLap(lapCounterP1);
 
-            checkWin(lapCounterP1, p1LastLap, config.getPlayer1());
+            checkWin(lapCounterP1, p1LastLap);
 
             if (car.equals(player1)) {
                 lapCounterP1++;
@@ -158,24 +156,19 @@ public class RacingApp extends GameApplication {
         return lapCounter >= config.getNumLaps();
     }
 
-    private void checkWin(int lapCounter, boolean lastLap, PlayerDetails player) {
+    private void checkWin(int lapCounter, boolean lastLap) {
         if (lapCounter == config.getNumLaps() + 1 && lastLap) {
-            showMessage("Player " + player.getPlayerName() + " won!", () -> {
-                sendWin();
-            });
+            sendWin();
         }
     }
 
     private void sendWin() {
         try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)) {
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
-
-            oos.writeObject(ProcessHandle.current().pid());
-
-            PlayerMetaData readObject = (PlayerMetaData) ois.readObject();
-            System.err.println(readObject);
-            Platform.exit();
+            ObjectInputStream ooi = new ObjectInputStream(clientSocket.getInputStream());
+            long pid = ProcessHandle.current().pid();
+            oos.writeObject(pid);
+            System.out.println(ooi.readObject());
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -184,12 +177,18 @@ public class RacingApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
+        if (startUpdate < 5)
+        {
+            startUpdate++;
+            return;
+        }
         Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
         PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
         try (Socket clientSocket = new Socket(Server.HOST, secondPlayerMetaData.getPort())) {
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
 
             PlayerPosition playerPosition = new PlayerPosition(player1.getX(), player1.getY(), player1.getRotation());
+            System.err.println("Sending data to " + secondPlayerMetaData.getPort());
 
             oos.writeObject(playerPosition);
         } catch (IOException e) {
@@ -219,6 +218,34 @@ public class RacingApp extends GameApplication {
             PlayerPosition answer = (PlayerPosition) ois.readObject();
             player2.setPosition(answer.getPosX(), answer.getPosY());
             player2.setRotation(answer.getRotation());
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void winListener() {
+        Integer port = playersMetadata.get(ProcessHandle.current().pid()).getPort();
+        port++;
+        port++;
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.err.println("Server listening for win on port:" + serverSocket.getLocalPort());
+
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+
+                new Thread(() -> finishGame(clientSocket)).start();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void finishGame(Socket clientSocket) {
+        try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())) {
+            String answer = (String) ois.readObject();
+            System.err.println(answer);
+            System.exit(0);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
