@@ -8,6 +8,7 @@ import leo.skvorc.racinggame.utils.SerializerDeserializer;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -130,10 +131,14 @@ public class Server {
     }
 
     private static void sendPorts(PlayerMetaData playerMetaData, PlayerMetaData sendData) throws IOException {
-        Socket firstClientSocket = new Socket(playerMetaData.getIpAddress(), playerMetaData.getPort());
-        ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
-        System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" + firstClientSocket.getPort());
-        oosFirstClient.writeObject(sendData);
+        try {
+            Socket firstClientSocket = new Socket(playerMetaData.getIpAddress(), playerMetaData.getPort());
+            ObjectOutputStream oosFirstClient = new ObjectOutputStream(firstClientSocket.getOutputStream());
+            System.err.println("Client is connecting to " + firstClientSocket.getInetAddress() + ":" + firstClientSocket.getPort());
+            oosFirstClient.writeObject(sendData);
+        } catch (ConnectException ce) {
+            sendPorts(playerMetaData, sendData);
+        }
     }
 
 
@@ -149,6 +154,7 @@ public class Server {
     private static void recordWin(Long playerPid) throws IOException {
         System.out.println("Finnish game!");
         players.get(playerPid).getConfig().getPlayer1().recordWin();
+        SerializerDeserializer.saveConfig(players.get(playerPid).getConfig());
 
         Long pidFirstPlayer = playerPorts.keySet().stream().filter(p -> !p.equals(playerPid)).findFirst().get();
         Long pidSecondPlayer = playerPorts.keySet().stream().filter(p -> p.equals(playerPid)).findFirst().get();

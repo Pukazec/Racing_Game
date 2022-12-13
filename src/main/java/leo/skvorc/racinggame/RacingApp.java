@@ -3,9 +3,7 @@ package leo.skvorc.racinggame;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
-import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
-import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.model.PlayerMetaData;
 import leo.skvorc.racinggame.model.PlayerPosition;
 import leo.skvorc.racinggame.server.Server;
@@ -38,6 +36,8 @@ public class RacingApp extends GameApplication {
     private boolean p1LastLap = false;
 
     private int startUpdate = 0;
+
+    private boolean networkInitialized = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -89,7 +89,7 @@ public class RacingApp extends GameApplication {
             Socket clientSocket = serverSocket.accept();
             System.err.println("Client connected from port: " + clientSocket.getPort());
 
-            new Thread(() -> loadPort(clientSocket)).start();
+            new Thread(() -> loadPort(clientSocket, serverSocket)).start();
 
         } catch (SocketException se) {
             System.err.println("Socket closed");
@@ -98,11 +98,14 @@ public class RacingApp extends GameApplication {
         }
     }
 
-    private void loadPort(Socket clientSocket) {
+    private void loadPort(Socket clientSocket, ServerSocket serverSocket) {
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream())) {
-            PlayerMetaData answer = (PlayerMetaData) ois.readObject();
 
+            PlayerMetaData answer = (PlayerMetaData) ois.readObject();
             playersMetadata.put(answer.getPid(), answer);
+
+            networkInitialized = true;
+
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -127,6 +130,7 @@ public class RacingApp extends GameApplication {
         setLevelFromMap("tmx/track" + config.getTrack() + ".tmx");
 
         player1 = spawn("player1", 1050, 765);
+        player2 = spawn("player2", 1050, 765);
         player1.rotateBy(-90);
 
         new Thread(this::networkListener).start();
@@ -177,9 +181,7 @@ public class RacingApp extends GameApplication {
 
     @Override
     protected void onUpdate(double tpf) {
-        if (startUpdate < 5)
-        {
-            startUpdate++;
+        if (!networkInitialized) {
             return;
         }
         Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
@@ -218,7 +220,7 @@ public class RacingApp extends GameApplication {
             PlayerPosition answer = (PlayerPosition) ois.readObject();
             player2.setPosition(answer.getPosX(), answer.getPosY());
             player2.setRotation(answer.getRotation());
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | NullPointerException e) {
             e.printStackTrace();
         }
     }
