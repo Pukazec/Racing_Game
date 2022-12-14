@@ -4,8 +4,8 @@ open module racinggame.main {
 
     requires com.almasb.fxgl.all;
     requires annotations;
+    requires java.rmi;
 
-    //opens leo.skvorc.racinggame to javafx.fxml;
     exports leo.skvorc.racinggame;
     exports leo.skvorc.racinggame.fxmlapps;
 }

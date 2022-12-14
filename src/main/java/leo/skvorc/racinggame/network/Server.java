@@ -1,8 +1,7 @@
-package leo.skvorc.racinggame.server;
+package leo.skvorc.racinggame.network;
 
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.model.PlayerMetaData;
-import leo.skvorc.racinggame.model.PlayerPosition;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
 import java.io.IOException;

@@ -6,7 +6,7 @@ import com.almasb.fxgl.entity.Entity;
 import javafx.scene.input.KeyCode;
 import leo.skvorc.racinggame.model.PlayerMetaData;
 import leo.skvorc.racinggame.model.PlayerPosition;
-import leo.skvorc.racinggame.server.Server;
+import leo.skvorc.racinggame.network.Server;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 

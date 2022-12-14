@@ -9,7 +9,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.ImageView;
 import leo.skvorc.racinggame.Config;
 import leo.skvorc.racinggame.model.PlayerMetaData;
-import leo.skvorc.racinggame.server.Server;
+import leo.skvorc.racinggame.network.Server;
 import leo.skvorc.racinggame.utils.ImageLoader;
 
 import java.io.IOException;
