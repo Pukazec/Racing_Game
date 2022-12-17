@@ -29,7 +29,6 @@ public class StartController implements Initializable {
     @FXML
     private Label lblError;
     private ToggleGroup radioButtonGroup1;
-    private ToggleGroup radioButtonGroup2;
 
     private static Config config;
 

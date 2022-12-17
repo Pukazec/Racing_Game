@@ -7,7 +7,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import leo.skvorc.racinggame.Config;
 import leo.skvorc.racinggame.network.ChatService;
 import leo.skvorc.racinggame.utils.DocumentationGenerator;
@@ -15,13 +14,10 @@ import leo.skvorc.racinggame.utils.ImageLoader;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
 import java.net.URL;
-import java.rmi.AccessException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class ResultsController implements Initializable {
@@ -59,8 +55,12 @@ public class ResultsController implements Initializable {
         lblPlayer2Name.setText(config.getPlayer2().getPlayerName());
         lblPlayer2NumOfWins.setText(String.valueOf(config.getPlayer2().getNumberOfWins()));
         lblNumOfLaps.setText(String.valueOf(config.getNumLaps()));
-        if (config.getTrack() == 1){ imgTrack.setImage(ImageLoader.loadImage(Config.TRACK1)); }
-        if (config.getTrack() == 2){ imgTrack.setImage(ImageLoader.loadImage(Config.TRACK2)); }
+        if (config.getTrack() == 1) {
+            imgTrack.setImage(ImageLoader.loadImage(Config.TRACK1));
+        }
+        if (config.getTrack() == 2) {
+            imgTrack.setImage(ImageLoader.loadImage(Config.TRACK2));
+        }
 
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 855);
@@ -68,29 +68,49 @@ public class ResultsController implements Initializable {
         } catch (RemoteException | NotBoundException e) {
             throw new RuntimeException(e);
         }
+
+        new Thread(() -> receiveMessages()).start();
     }
 
-    public void documentation(){
+    public void documentation() {
         DocumentationGenerator.generateParametersString();
         btnDocumentation.setText("Documentation generated");
         btnDocumentation.setDisable(true);
     }
 
-    public void messageEnterSend(KeyCode pressedKey){
-        if (pressedKey == KeyCode.ENTER) {
-            sendMessage();
+    public void receiveMessages() {
+        while (true) {
+            try {
+                StringBuilder chatHistory = new StringBuilder();
+
+                stub.getChatHistory().forEach(m -> chatHistory.append(m + System.lineSeparator()));
+
+                chatTextArea.setText(chatHistory.toString());
+
+                Thread.sleep(500);
+            } catch (RemoteException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
         }
     }
 
     public void sendMessage() {
+
+        if (messageTextField.getText().toString().trim().isBlank()) {
+            return;
+        }
+
         try {
-            stub.sendMessage(lblPlayer1Name.getText(), messageTextField.getText());
+            stub.sendMessage(ResultsSelectPlayer.getPlayerName(), messageTextField.getText());
 
             StringBuilder chatHistory = new StringBuilder();
 
             stub.getChatHistory().forEach(m -> chatHistory.append(m + System.lineSeparator()));
 
             chatTextArea.setText(chatHistory.toString());
+
+            messageTextField.setText("");
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }

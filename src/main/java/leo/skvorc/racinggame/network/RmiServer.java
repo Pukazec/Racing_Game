@@ -8,7 +8,6 @@ import java.rmi.server.UnicastRemoteObject;
 public class RmiServer {
     private static final int RANDOM_PORT_HINT = 0;
     private static final int RMI_PORT = 855;
-            ;
 
     public static void main(String[] args) {
         try {

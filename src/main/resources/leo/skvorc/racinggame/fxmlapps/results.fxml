@@ -109,6 +109,6 @@
             <Insets top="100.0" />
          </GridPane.margin>
       </Button>
-      <TextField fx:id="messageTextField" onKeyPressed="#messageEnterSend" opacity="0.5" GridPane.columnIndex="2" GridPane.rowIndex="6" GridPane.valignment="TOP" />
+      <TextField fx:id="messageTextField" onAction="#sendMessage" opacity="0.5" GridPane.columnIndex="2" GridPane.rowIndex="6" GridPane.valignment="TOP" />
    </children>
 </GridPane>
