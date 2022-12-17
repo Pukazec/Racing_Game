@@ -125,6 +125,20 @@ public class RacingApp extends GameApplication {
 
         config = SerializerDeserializer.loadConfig();
 
+        Long pidFirstPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
+        Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> p.equals(ProcessHandle.current().pid())).findFirst().get();
+
+        PlayerMetaData firstPlayerMetaData = playersMetadata.get(pidFirstPlayer);
+        PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
+
+        if (firstPlayerMetaData.getPort() < secondPlayerMetaData.getPort()) {
+            Config tempConfig = config;
+            tempConfig.setPlayer1(config.getPlayer2());
+            tempConfig.setPlayer2(config.getPlayer1());
+            config = tempConfig;
+        }
+
+
         getGameWorld().addEntityFactory(new RacingFactory(config));
 
         setLevelFromMap("tmx/track" + config.getTrack() + ".tmx");

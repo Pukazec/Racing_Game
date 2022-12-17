@@ -2,6 +2,7 @@ package leo.skvorc.racinggame.network;
 
 import java.rmi.RemoteException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void sendMessage(String player, String newMessage) throws RemoteException {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(LocalDateTime.now());
+        stringBuilder.append(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_TIME));
         stringBuilder.append(": ");
         stringBuilder.append(player);
         stringBuilder.append(" -> ");
