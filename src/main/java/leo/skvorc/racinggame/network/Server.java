@@ -1,9 +1,12 @@
 package leo.skvorc.racinggame.network;
 
+import leo.skvorc.racinggame.Config;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.model.PlayerMetaData;
+import leo.skvorc.racinggame.utils.JndiUtils;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
+import javax.naming.NamingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -15,8 +18,7 @@ import java.util.Map;
 
 public class Server {
 
-    public static final String HOST = "localhost";
-    public static final int PORT = 850;
+    private static int PORT;
 
     private static Map<Long, PlayerMetaData> players = new HashMap<>();
     private static Map<Long, PlayerMetaData> playerPorts = new HashMap<>();
@@ -28,6 +30,13 @@ public class Server {
     }
 
     private static void acceptRequests() {
+        try {
+            String serverPortString = JndiUtils.getConfigurationParameter("server.port");
+            PORT = Integer.parseInt(serverPortString);
+        } catch (NamingException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.err.println("Server listening on port:" + serverSocket.getLocalPort());
 
@@ -52,7 +61,6 @@ public class Server {
              ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())) {
 
             //region Init Racing
-            if (connectionNumber <= 4/*TODO*/) {
                 PlayerMetaData playerMetaData = (PlayerMetaData) ois.readObject();
                 playerMetaData.setPort(clientSocket.getPort());
                 System.out.println("Connected player metadata: " +
@@ -71,22 +79,20 @@ public class Server {
                     startGame(playerMetaData.getPid());
                     writeConfig(playerMetaData.getPid(), playerMetaData.getConfig().getPlayer1());
                 }
-                if (connectionNumber >= 3) {
+                if (connectionNumber >= 3 && connectionNumber < 5) {
                     playerPorts.put(playerMetaData.getPid(), playerMetaData);
                     if (connectionNumber == 4/*TODO*/) {
                         initPorts(playerMetaData.getPid());
                     }
                 }
+            if (connectionNumber >= 5) {
+                recordWin(playerMetaData);
+                oos.writeObject("Recording win");
             }
             //endregion
 
 
-            //region Finish racing
-            if (connectionNumber >= 5) {
-                Long playerPid = (Long) ois.readObject();
-                oos.writeObject("Recording win");
-                recordWin(playerPid);
-            }
+            //region Finish
             //endregion
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -150,13 +156,18 @@ public class Server {
     //endregion
 
     //region Finish
-    private static void recordWin(Long playerPid) throws IOException {
+    private static void recordWin(PlayerMetaData player) throws IOException {
         System.out.println("Finnish game!");
-        players.get(playerPid).getConfig().getPlayer1().recordWin();
-        SerializerDeserializer.saveConfig(players.get(playerPid).getConfig());
+        Config config = playerPorts.get(player.getPid()).getConfig();
+        if (player.getPlayerName() == config.getPlayer1().getPlayerName()) {
+            config.getPlayer1().recordWin();
+        } else {
+            config.getPlayer2().recordWin();
+        }
+        SerializerDeserializer.saveConfig(playerPorts.get(player.getPid()).getConfig());
 
-        Long pidFirstPlayer = playerPorts.keySet().stream().filter(p -> !p.equals(playerPid)).findFirst().get();
-        Long pidSecondPlayer = playerPorts.keySet().stream().filter(p -> p.equals(playerPid)).findFirst().get();
+        Long pidFirstPlayer = playerPorts.keySet().stream().filter(p -> !p.equals(player.getPid())).findFirst().get();
+        Long pidSecondPlayer = playerPorts.keySet().stream().filter(p -> p.equals(player.getPid())).findFirst().get();
 
         PlayerMetaData firstPlayerMetaData = playerPorts.get(pidFirstPlayer);
         PlayerMetaData secondPlayerMetaData = playerPorts.get(pidSecondPlayer);

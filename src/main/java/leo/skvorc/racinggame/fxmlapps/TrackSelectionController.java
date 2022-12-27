@@ -11,7 +11,9 @@ import leo.skvorc.racinggame.Config;
 import leo.skvorc.racinggame.model.PlayerMetaData;
 import leo.skvorc.racinggame.network.Server;
 import leo.skvorc.racinggame.utils.ImageLoader;
+import leo.skvorc.racinggame.utils.JndiUtils;
 
+import javax.naming.NamingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -44,6 +46,9 @@ public class TrackSelectionController implements Initializable {
 
     ToggleGroup radioButtonGroup;
 
+    private static String HOST;
+    private static int PORT;
+
     private static Config config;
 
     private static Map<Long, PlayerMetaData> playersMetadata = new HashMap<>();
@@ -59,6 +64,14 @@ public class TrackSelectionController implements Initializable {
         imgTrack2.setImage(ImageLoader.loadImage(Config.TRACK2));
 
         rbTrack2.setSelected(true);
+
+        try {
+            String serverPortString = JndiUtils.getConfigurationParameter("server.port");
+            PORT = Integer.parseInt(serverPortString);
+            HOST = JndiUtils.getConfigurationParameter("server.host");
+        } catch (NamingException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void startRacing() {
@@ -80,12 +93,11 @@ public class TrackSelectionController implements Initializable {
             config.setTrack(2);
         }
         config.setNumLaps((int) sliderNumOfLaps.getValue());
-        // SerializerDeserializer.saveConfig(config);
     }
 
 
     private void sendDataToServer() {
-        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)) {
+        try (Socket clientSocket = new Socket(HOST, PORT)) {
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
             System.err.println("Client is connecting to " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());

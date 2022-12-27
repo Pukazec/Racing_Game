@@ -7,9 +7,11 @@ import javafx.scene.input.KeyCode;
 import leo.skvorc.racinggame.model.PlayerMetaData;
 import leo.skvorc.racinggame.model.PlayerPosition;
 import leo.skvorc.racinggame.network.Server;
+import leo.skvorc.racinggame.utils.JndiUtils;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
+import javax.naming.NamingException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -23,6 +25,8 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class RacingApp extends GameApplication {
 
+    private static String HOST;
+    private static int PORT;
     private final MoveDirection moveDirection = new MoveDirection();
 
     private Config config;
@@ -54,6 +58,14 @@ public class RacingApp extends GameApplication {
         gameSettings.setWidth(15 * 128);
         gameSettings.setHeight(8 * 128);
 
+        try {
+            String serverPortString = JndiUtils.getConfigurationParameter("server.port");
+            PORT = Integer.parseInt(serverPortString);
+            HOST = JndiUtils.getConfigurationParameter("server.host");
+        } catch (NamingException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
         initNetwork();
     }
 
@@ -64,7 +76,7 @@ public class RacingApp extends GameApplication {
     }
 
     private void sendPort() {
-        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)) {
+        try (Socket clientSocket = new Socket(HOST, PORT)) {
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
 
@@ -131,14 +143,6 @@ public class RacingApp extends GameApplication {
         PlayerMetaData firstPlayerMetaData = playersMetadata.get(pidFirstPlayer);
         PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
 
-        if (firstPlayerMetaData.getPort() < secondPlayerMetaData.getPort()) {
-            Config tempConfig = config;
-            tempConfig.setPlayer1(config.getPlayer2());
-            tempConfig.setPlayer2(config.getPlayer1());
-            config = tempConfig;
-        }
-
-
         getGameWorld().addEntityFactory(new RacingFactory(config));
 
         setLevelFromMap("tmx/track" + config.getTrack() + ".tmx");
@@ -181,11 +185,11 @@ public class RacingApp extends GameApplication {
     }
 
     private void sendWin() {
-        try (Socket clientSocket = new Socket(Server.HOST, Server.PORT)) {
+        try (Socket clientSocket = new Socket(HOST, PORT)) {
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
             ObjectInputStream ooi = new ObjectInputStream(clientSocket.getInputStream());
-            long pid = ProcessHandle.current().pid();
-            oos.writeObject(pid);
+
+            oos.writeObject(playersMetadata.get(ProcessHandle.current().pid()));
             System.out.println(ooi.readObject());
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -200,7 +204,7 @@ public class RacingApp extends GameApplication {
         }
         Long pidSecondPlayer = playersMetadata.keySet().stream().filter(p -> !p.equals(ProcessHandle.current().pid())).findFirst().get();
         PlayerMetaData secondPlayerMetaData = playersMetadata.get(pidSecondPlayer);
-        try (Socket clientSocket = new Socket(Server.HOST, secondPlayerMetaData.getPort())) {
+        try (Socket clientSocket = new Socket(HOST, secondPlayerMetaData.getPort())) {
             ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
 
             PlayerPosition playerPosition = new PlayerPosition(player1.getX(), player1.getY(), player1.getRotation());
