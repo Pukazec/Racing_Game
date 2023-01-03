@@ -66,10 +66,10 @@ public class StartController implements Initializable {
 
 
         //TODO remove mock data
-        txtP1.setText("Mirko");
-        txtP2.setText("Slavko");
-        orange1.setSelected(true);
-        yellow2.setSelected(true);
+        txtP1.setText("Bosko");
+        txtP2.setText("Buha");
+        black1.setSelected(true);
+        green2.setSelected(true);
     }
 
     public void selectTrack() throws IOException {
@@ -94,11 +94,7 @@ public class StartController implements Initializable {
         for (TextField field : validationFields) {
             if (field.getText().trim().isBlank()) { return true; }
         }
-        if (radioButtonGroup1.getSelectedToggle() == null || radioButtonGroup2.getSelectedToggle() == null
-                || !radioButtonGroup1.getSelectedToggle().isSelected() || !radioButtonGroup2.getSelectedToggle().isSelected()) {
-            return true;
-        }
-
-        return false;
+        return radioButtonGroup1.getSelectedToggle() == null || radioButtonGroup2.getSelectedToggle() == null
+                || !radioButtonGroup1.getSelectedToggle().isSelected() || !radioButtonGroup2.getSelectedToggle().isSelected();
     }
 }

@@ -4,6 +4,8 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.entity.Entity;
 import javafx.scene.input.KeyCode;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
@@ -84,7 +86,11 @@ public class RacingApp extends GameApplication {
             }
         });
 
-        onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> moveDirection.RightCollision(car));
+        onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> {
+            Text text = (Text) getGameScene().getUINodes().get(0);
+            text.setText("Pero");
+            moveDirection.RightCollision(car);
+        });
 
         onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> moveDirection.LeftCollision(car));
     }
@@ -102,6 +108,21 @@ public class RacingApp extends GameApplication {
                 newGame();
             });
         }
+    }
+
+    @Override
+    protected void initUI() {
+        Text playerOneHits = new Text(config.getPlayer1().getPlayerName() + ": 0 hits");
+        playerOneHits.setTranslateX(10);
+        playerOneHits.setTranslateY(50);
+        playerOneHits.setFont(Font.font(45));
+        getGameScene().addUINode(playerOneHits);
+
+        Text playerTwoHits = new Text(config.getPlayer2().getPlayerName() + ": 0 hits");
+        playerTwoHits.setTranslateX(10);
+        playerTwoHits.setTranslateY(100);
+        playerTwoHits.setFont(Font.font(45));
+        getGameScene().addUINode(playerTwoHits);
     }
 
     private void newGame() {
