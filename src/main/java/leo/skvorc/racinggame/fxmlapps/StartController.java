@@ -3,7 +3,7 @@ package leo.skvorc.racinggame.fxmlapps;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import leo.skvorc.racinggame.Config;
+import leo.skvorc.racinggame.model.Config;
 import leo.skvorc.racinggame.model.CarColor;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.utils.FxmlUtils;

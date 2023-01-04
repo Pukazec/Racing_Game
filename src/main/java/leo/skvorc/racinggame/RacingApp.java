@@ -6,9 +6,16 @@ import com.almasb.fxgl.entity.Entity;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import leo.skvorc.racinggame.model.CarCollision;
+import leo.skvorc.racinggame.model.Config;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
@@ -25,6 +32,9 @@ public class RacingApp extends GameApplication {
     private int lapCounterP2 = 0;
     private boolean p1LastLap = false;
     private boolean p2LastLap = false;
+
+    private List<CarCollision> collisionList;
+    private LocalDateTime startTime;
 
     public static void main(String[] args) {
         launch(args);
@@ -53,6 +63,8 @@ public class RacingApp extends GameApplication {
     @Override
     protected void initGame() {
 
+        collisionList = new ArrayList<>();
+
         config = SerializerDeserializer.loadConfig();
 
         getGameWorld().addEntityFactory(new RacingFactory(config));
@@ -65,6 +77,8 @@ public class RacingApp extends GameApplication {
         player2.rotateBy(-90);
 
         loopBGM("avalanche.mp3");
+        startTime = LocalDateTime.now();
+        new Thread(this::calculateColisions).start();
     }
 
     @Override
@@ -87,12 +101,14 @@ public class RacingApp extends GameApplication {
         });
 
         onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> {
-            Text text = (Text) getGameScene().getUINodes().get(0);
-            text.setText("Pero");
+            new Thread(() -> recordCollision(car)).start();
             moveDirection.RightCollision(car);
         });
 
-        onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> moveDirection.LeftCollision(car));
+        onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> {
+            new Thread(() -> recordCollision(car)).start();
+            moveDirection.LeftCollision(car);
+        });
     }
 
     private boolean checkLastLap(int lapCounter) {
@@ -128,5 +144,14 @@ public class RacingApp extends GameApplication {
     private void newGame() {
         SerializerDeserializer.saveConfig(config);
         getGameController().startNewGame();
+    }
+
+    private void recordCollision(Entity car) {
+        PlayerDetails playerDetails = car == player1 ? config.getPlayer1() : config.getPlayer2();
+        Duration timeStamp = Duration.between(startTime, LocalDateTime.now());
+        collisionList.add(new CarCollision(playerDetails, car.getX(), car.getY(), car.getRotation(), timeStamp));
+    }
+
+    private void calculateColisions() {
     }
 }

@@ -1,6 +1,4 @@
-package leo.skvorc.racinggame;
-
-import leo.skvorc.racinggame.model.PlayerDetails;
+package leo.skvorc.racinggame.model;
 
 import java.io.Serializable;
 

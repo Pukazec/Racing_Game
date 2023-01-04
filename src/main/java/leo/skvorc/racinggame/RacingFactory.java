@@ -6,6 +6,7 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import leo.skvorc.racinggame.model.Config;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import org.jetbrains.annotations.NotNull;
 

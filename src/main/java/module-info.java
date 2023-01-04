@@ -8,4 +8,5 @@ open module racinggame.main {
     //opens leo.skvorc.racinggame to javafx.fxml;
     exports leo.skvorc.racinggame;
     exports leo.skvorc.racinggame.fxmlapps;
+    exports leo.skvorc.racinggame.model;
 }

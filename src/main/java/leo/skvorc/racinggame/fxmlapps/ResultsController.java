@@ -5,7 +5,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import leo.skvorc.racinggame.Config;
+import leo.skvorc.racinggame.model.Config;
 import leo.skvorc.racinggame.utils.DocumentationGenerator;
 import leo.skvorc.racinggame.utils.ImageLoader;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;

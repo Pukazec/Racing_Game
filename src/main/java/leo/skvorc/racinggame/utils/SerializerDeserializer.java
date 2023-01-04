@@ -1,6 +1,6 @@
 package leo.skvorc.racinggame.utils;
 
-import leo.skvorc.racinggame.Config;
+import leo.skvorc.racinggame.model.Config;
 
 import java.io.*;
 
