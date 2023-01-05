@@ -12,16 +12,19 @@ import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
 public class RacingApp extends GameApplication {
+
+    private static final String COLLISIONS_FILE = "collisions.txt";
 
     private final MoveDirection moveDirection = new MoveDirection();
 
@@ -79,7 +82,7 @@ public class RacingApp extends GameApplication {
         player1.rotateBy(-90);
         player2.rotateBy(-90);
 
-        loopBGM("avalanche.mp3");
+        //loopBGM("avalanche.mp3");
         startTime = LocalDateTime.now();
         new Thread(() -> {
             while (true) {
@@ -163,7 +166,7 @@ public class RacingApp extends GameApplication {
     private synchronized void recordCollision(Entity car) {
         while (threadInUse) {
             try {
-                System.out.println("Thread in use");
+                System.out.println("Thread for recording cannot start");
                 wait();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -175,7 +178,7 @@ public class RacingApp extends GameApplication {
         Duration timeStamp = Duration.between(startTime, LocalDateTime.now());
         collisionList.add(new CarCollision(playerDetails, car.getX(), car.getY(), car.getRotation(), timeStamp));
 
-        try (FileWriter fileWriter = new FileWriter("collisions.txt")) {
+        try (FileWriter fileWriter = new FileWriter(COLLISIONS_FILE)) {
             StringBuilder stringBuilder = new StringBuilder();
             collisionList.forEach(c -> {
                 stringBuilder.append(c.getPlayer().getPlayerName());
@@ -202,7 +205,7 @@ public class RacingApp extends GameApplication {
     private synchronized void calculateCollisions() {
         while (threadInUse) {
             try {
-                System.out.println("Thread in use");
+                System.out.println("Thread for calculation cannot start");
                 wait();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -210,15 +213,27 @@ public class RacingApp extends GameApplication {
         }
         threadInUse = true;
 
-        int size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer1())).toList().size();
+        AtomicInteger player1Collisions = new AtomicInteger();
+        AtomicInteger player2Collisions = new AtomicInteger();
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(COLLISIONS_FILE))) {
+            bufferedReader.lines().forEach(line -> {
+                String name = Arrays.stream(line.split(",")).findFirst().toString();
+                if (name.equals(config.getPlayer1().getPlayerName())) {
+                    player1Collisions.getAndIncrement();
+                } else {
+                    player2Collisions.getAndIncrement();
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         Text label = (Text) getGameScene().getUINodes().get(0);
-        label.setText(config.getPlayer1().getPlayerName() + ": " + size + " hits");
-
-        size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer2())).toList().size();
+        label.setText(config.getPlayer1().getPlayerName() + ": " + player1Collisions.get() + " hits");
 
         label = (Text) getGameScene().getUINodes().get(1);
-        label.setText(config.getPlayer2().getPlayerName() + ": " + size + " hits");
+        label.setText(config.getPlayer2().getPlayerName() + ": " + player2Collisions.get() + " hits");
 
         threadInUse = false;
         notifyAll();
