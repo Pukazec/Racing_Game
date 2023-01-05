@@ -78,7 +78,7 @@ public class RacingApp extends GameApplication {
 
         loopBGM("avalanche.mp3");
         startTime = LocalDateTime.now();
-        new Thread(this::calculateColisions).start();
+        new Thread(this::calculateCollisions).start();
     }
 
     @Override
@@ -152,6 +152,26 @@ public class RacingApp extends GameApplication {
         collisionList.add(new CarCollision(playerDetails, car.getX(), car.getY(), car.getRotation(), timeStamp));
     }
 
-    private void calculateColisions() {
+    private void calculateCollisions() {
+        int size;
+
+        while (true) {
+            size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer1())).toList().size();
+
+            Text label = (Text) getGameScene().getUINodes().get(0);
+            label.setText(config.getPlayer1().getPlayerName() + ": " + size + " hits");
+
+            size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer2())).toList().size();
+
+            label = (Text) getGameScene().getUINodes().get(1);
+            label.setText(config.getPlayer2().getPlayerName() + ": " + size + " hits");
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 }
