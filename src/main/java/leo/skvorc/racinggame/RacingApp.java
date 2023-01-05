@@ -35,6 +35,7 @@ public class RacingApp extends GameApplication {
 
     private List<CarCollision> collisionList;
     private LocalDateTime startTime;
+    private boolean threadInUse = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -78,7 +79,18 @@ public class RacingApp extends GameApplication {
 
         loopBGM("avalanche.mp3");
         startTime = LocalDateTime.now();
-        new Thread(this::calculateCollisions).start();
+        new Thread(() -> {
+            while (true) {
+                if (collisionList.size() != 0) {
+                    new Thread(this::calculateCollisions).start();
+                }
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 
     @Override
@@ -146,32 +158,48 @@ public class RacingApp extends GameApplication {
         getGameController().startNewGame();
     }
 
-    private void recordCollision(Entity car) {
-        PlayerDetails playerDetails = car == player1 ? config.getPlayer1() : config.getPlayer2();
-        Duration timeStamp = Duration.between(startTime, LocalDateTime.now());
-        collisionList.add(new CarCollision(playerDetails, car.getX(), car.getY(), car.getRotation(), timeStamp));
-    }
-
-    private void calculateCollisions() {
-        int size;
-
-        while (true) {
-            size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer1())).toList().size();
-
-            Text label = (Text) getGameScene().getUINodes().get(0);
-            label.setText(config.getPlayer1().getPlayerName() + ": " + size + " hits");
-
-            size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer2())).toList().size();
-
-            label = (Text) getGameScene().getUINodes().get(1);
-            label.setText(config.getPlayer2().getPlayerName() + ": " + size + " hits");
-
+    private synchronized void recordCollision(Entity car) {
+        while (threadInUse) {
             try {
-                Thread.sleep(100);
+                System.out.println("Thread in use");
+                wait();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
+        threadInUse = true;
 
+        PlayerDetails playerDetails = car == player1 ? config.getPlayer1() : config.getPlayer2();
+        Duration timeStamp = Duration.between(startTime, LocalDateTime.now());
+        collisionList.add(new CarCollision(playerDetails, car.getX(), car.getY(), car.getRotation(), timeStamp));
+
+        threadInUse = false;
+        notifyAll();
     }
+
+    private synchronized void calculateCollisions() {
+        while (threadInUse) {
+            try {
+                System.out.println("Thread in use");
+                wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        threadInUse = true;
+
+        int size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer1())).toList().size();
+
+        Text label = (Text) getGameScene().getUINodes().get(0);
+        label.setText(config.getPlayer1().getPlayerName() + ": " + size + " hits");
+
+        size = collisionList.stream().filter(c -> c.getPlayer().equals(config.getPlayer2())).toList().size();
+
+        label = (Text) getGameScene().getUINodes().get(1);
+        label.setText(config.getPlayer2().getPlayerName() + ": " + size + " hits");
+
+        threadInUse = false;
+        notifyAll();
+    }
+
 }
