@@ -12,6 +12,8 @@ import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -172,6 +174,26 @@ public class RacingApp extends GameApplication {
         PlayerDetails playerDetails = car == player1 ? config.getPlayer1() : config.getPlayer2();
         Duration timeStamp = Duration.between(startTime, LocalDateTime.now());
         collisionList.add(new CarCollision(playerDetails, car.getX(), car.getY(), car.getRotation(), timeStamp));
+
+        try (FileWriter fileWriter = new FileWriter("collisions.txt")) {
+            StringBuilder stringBuilder = new StringBuilder();
+            collisionList.forEach(c -> {
+                stringBuilder.append(c.getPlayer().getPlayerName());
+                stringBuilder.append(',');
+                stringBuilder.append(c.getPositionX());
+                stringBuilder.append(',');
+                stringBuilder.append(c.getPositionY());
+                stringBuilder.append(',');
+                stringBuilder.append(c.getRotation());
+                stringBuilder.append(',');
+                stringBuilder.append(c.getTimeStamp());
+                stringBuilder.append(',');
+                stringBuilder.append(System.lineSeparator());
+            });
+            fileWriter.write(stringBuilder.toString());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         threadInUse = false;
         notifyAll();
