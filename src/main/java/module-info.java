@@ -1,6 +1,7 @@
 open module racinggame.main {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.xml;
 
     requires com.almasb.fxgl.all;
     requires annotations;

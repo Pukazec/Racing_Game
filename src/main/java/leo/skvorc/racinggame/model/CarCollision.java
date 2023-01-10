@@ -3,7 +3,7 @@ package leo.skvorc.racinggame.model;
 import java.time.Duration;
 
 public class CarCollision {
-    private PlayerDetails player;
+    private String player;
     private double positionX;
     private double positionY;
     private double rotation;
@@ -12,7 +12,7 @@ public class CarCollision {
     public CarCollision() {
     }
 
-    public CarCollision(PlayerDetails player, double positionX, double positionY, double rotation, Duration timeStamp) {
+    public CarCollision(String player, double positionX, double positionY, double rotation, Duration timeStamp) {
         this.player = player;
         this.positionX = positionX;
         this.positionY = positionY;
@@ -20,11 +20,11 @@ public class CarCollision {
         this.timeStamp = timeStamp;
     }
 
-    public PlayerDetails getPlayer() {
+    public String getPlayer() {
         return player;
     }
 
-    public void setPlayer(PlayerDetails player) {
+    public void setPlayer(String player) {
         this.player = player;
     }
 

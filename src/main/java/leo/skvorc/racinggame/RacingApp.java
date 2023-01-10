@@ -11,12 +11,12 @@ import leo.skvorc.racinggame.model.Config;
 import leo.skvorc.racinggame.model.PlayerDetails;
 import leo.skvorc.racinggame.utils.MoveDirection;
 import leo.skvorc.racinggame.utils.SerializerDeserializer;
+import leo.skvorc.racinggame.utils.XMLUtils;
 
 import java.io.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -41,6 +41,8 @@ public class RacingApp extends GameApplication {
     private List<CarCollision> collisionList;
     private LocalDateTime startTime;
     private boolean threadInUse = false;
+    private boolean replay = true;
+    private Duration lastDuration;
 
     public static void main(String[] args) {
         launch(args);
@@ -68,7 +70,6 @@ public class RacingApp extends GameApplication {
 
     @Override
     protected void initGame() {
-
         collisionList = new ArrayList<>();
 
         config = SerializerDeserializer.loadConfig();
@@ -83,7 +84,13 @@ public class RacingApp extends GameApplication {
         player2.rotateBy(-90);
 
         //loopBGM("avalanche.mp3");
+
+        if (replay) {
+            collisionList = XMLUtils.readXML();
+        }
+
         startTime = LocalDateTime.now();
+        lastDuration = Duration.between(startTime, LocalDateTime.now());
         new Thread(() -> {
             while (true) {
                 if (collisionList.size() != 0) {
@@ -100,32 +107,34 @@ public class RacingApp extends GameApplication {
 
     @Override
     protected void initPhysics() {
-        onCollisionBegin(EntityType.PLAYER, EntityType.FINISH, (car, finish) -> {
+        if (!replay) {
+            onCollisionBegin(EntityType.PLAYER, EntityType.FINISH, (car, finish) -> {
 
-            p1LastLap = checkLastLap(lapCounterP1);
-            p2LastLap = checkLastLap(lapCounterP2);
+                p1LastLap = checkLastLap(lapCounterP1);
+                p2LastLap = checkLastLap(lapCounterP2);
 
-            checkWin(lapCounterP1, p1LastLap, config.getPlayer1());
-            checkWin(lapCounterP2, p2LastLap, config.getPlayer2());
+                checkWin(lapCounterP1, p1LastLap, config.getPlayer1());
+                checkWin(lapCounterP2, p2LastLap, config.getPlayer2());
 
-            if (car.equals(player1)) {
-                lapCounterP1++;
-            }
+                if (car.equals(player1)) {
+                    lapCounterP1++;
+                }
 
-            if (car.equals(player2)) {
-                lapCounterP2++;
-            }
-        });
+                if (car.equals(player2)) {
+                    lapCounterP2++;
+                }
+            });
 
-        onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> {
-            new Thread(() -> recordCollision(car)).start();
-            moveDirection.RightCollision(car);
-        });
+            onCollisionBegin(EntityType.PLAYER, EntityType.RIGHTWALL, (car, wall) -> {
+                new Thread(() -> recordCollision(car)).start();
+                moveDirection.RightCollision(car);
+            });
 
-        onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> {
-            new Thread(() -> recordCollision(car)).start();
-            moveDirection.LeftCollision(car);
-        });
+            onCollisionBegin(EntityType.PLAYER, EntityType.LEFTWALL, (car, wall) -> {
+                new Thread(() -> recordCollision(car)).start();
+                moveDirection.LeftCollision(car);
+            });
+        }
     }
 
     private boolean checkLastLap(int lapCounter) {
@@ -134,6 +143,7 @@ public class RacingApp extends GameApplication {
 
     private void checkWin(int lapCounter, boolean lastLap, PlayerDetails player) {
         if (lapCounter == config.getNumLaps() + 1 && lastLap) {
+            XMLUtils.saveXml(collisionList);
             showMessage("Player " + player.getPlayerName() + " won!", () -> {
                 lapCounterP1 = 0;
                 lapCounterP2 = 0;
@@ -158,8 +168,36 @@ public class RacingApp extends GameApplication {
         getGameScene().addUINode(playerTwoHits);
     }
 
+    @Override
+    protected void onUpdate(double tpf) {
+        super.onUpdate(tpf);
+        if (replay){
+            for (CarCollision collision : collisionList) {
+                calculatePassedTime(collision);
+            }
+        }
+    }
+
+    private void calculatePassedTime(CarCollision collision) {
+        Duration passed = Duration.between(startTime, LocalDateTime.now());
+        Duration timeStamp = collision.getTimeStamp();
+        if (timeStamp.toMillis() > lastDuration.toMillis() && timeStamp.toMillis() < passed.toMillis()){
+            if (collision.getPlayer() == config.getPlayer1().getPlayerName()) {
+                updatePosition(player1, collision);
+            } else {
+                updatePosition(player2, collision);
+            }
+        }
+    }
+
+    private void updatePosition(Entity player, CarCollision collision) {
+        player.setPosition(collision.getPositionX(), collision.getPositionY());
+        player.setRotation(collision.getRotation());
+    }
+
     private void newGame() {
         SerializerDeserializer.saveConfig(config);
+        replay = true;
         getGameController().startNewGame();
     }
 
@@ -176,12 +214,12 @@ public class RacingApp extends GameApplication {
 
         PlayerDetails playerDetails = car == player1 ? config.getPlayer1() : config.getPlayer2();
         Duration timeStamp = Duration.between(startTime, LocalDateTime.now());
-        collisionList.add(new CarCollision(playerDetails, car.getX(), car.getY(), car.getRotation(), timeStamp));
+        collisionList.add(new CarCollision(playerDetails.getPlayerName(), car.getX(), car.getY(), car.getRotation(), timeStamp));
 
         try (FileWriter fileWriter = new FileWriter(COLLISIONS_FILE)) {
             StringBuilder stringBuilder = new StringBuilder();
             collisionList.forEach(c -> {
-                stringBuilder.append(c.getPlayer().getPlayerName());
+                stringBuilder.append(c.getPlayer());
                 stringBuilder.append(',');
                 stringBuilder.append(c.getPositionX());
                 stringBuilder.append(',');
@@ -218,7 +256,8 @@ public class RacingApp extends GameApplication {
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(COLLISIONS_FILE))) {
             bufferedReader.lines().forEach(line -> {
-                String name = Arrays.stream(line.split(",")).findFirst().toString();
+                String[] split = line.split(",");
+                String name = split[0];
                 if (name.equals(config.getPlayer1().getPlayerName())) {
                     player1Collisions.getAndIncrement();
                 } else {
